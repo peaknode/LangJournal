@@ -11,10 +11,14 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@langjournal/core": "workspace:*",
+    "@mlc-ai/web-llm": "^0.2.82",
     "@repo/ui": "workspace:*",
+    "dexie": "^4.0.10",
     "next": "16.2.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
