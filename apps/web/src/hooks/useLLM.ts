@@ -14,15 +14,44 @@
 
 'use client';
 
-import { useCallback, useRef } from 'react';
-import { CreateWebWorkerMLCEngine } from '@mlc-ai/web-llm';
+import { useCallback } from 'react';
+import { MLCEngine, hasModelInCache, prebuiltAppConfig } from '@mlc-ai/web-llm';
+import type { AppConfig } from '@mlc-ai/web-llm';
 import type { ChatMessage } from '@langjournal/core';
 import { LLMError, parseFeedbackResponse } from '@langjournal/core';
 import type { LLMFeedbackResponse, LLMErrorCode } from '@langjournal/core';
 import { useLLMStore } from '../lib/store';
 
 /** 사용할 LLM 모델 ID */
-const MODEL_ID = 'Gemma-3-1B-Instruct-q4f32_1-MLC';
+const MODEL_ID = 'gemma-2-2b-jpn-it-q4f16_1-MLC';
+
+/**
+ * HuggingFace CORS 우회를 위한 커스텀 appConfig
+ *
+ * HuggingFace CDN은 localhost 오리진을 CORS 허용하지 않아
+ * Next.js rewrite(/hf-proxy/*)를 통해 서버 사이드로 중계합니다.
+ */
+function buildAppConfig(): AppConfig {
+  const base = prebuiltAppConfig.model_list.find(
+    (m) => m.model_id === MODEL_ID
+  );
+  if (!base) return prebuiltAppConfig;
+
+  // WebLLM은 내부적으로 new URL(modelUrl)을 사용하므로 절대 URL이어야 합니다.
+  const proxyOrigin = typeof window !== 'undefined'
+    ? window.location.origin
+    : 'http://localhost:3000';
+
+  return {
+    ...prebuiltAppConfig,
+    model_list: [
+      {
+        ...base,
+        model: base.model.replace('https://huggingface.co', `${proxyOrigin}/hf-proxy`),
+      },
+    ],
+  };
+}
 
 /**
  * WebLLM 엔진 인터페이스 훅
@@ -51,17 +80,15 @@ const MODEL_ID = 'Gemma-3-1B-Instruct-q4f32_1-MLC';
 export function useLLM() {
   const { engine, status, setEngine, setStatus, setLoadProgress, setError } =
     useLLMStore();
-  const workerRef = useRef<Worker | null>(null);
 
   /**
    * WebLLM 엔진을 초기화합니다.
    *
    * 프로세스:
    * 1. WebGPU 지원 여부 확인 (필수)
-   * 2. Worker 생성
-   * 3. CreateWebWorkerMLCEngine으로 엔진 생성
-   * 4. 모델 다운로드 및 로드
-   * 5. Zustand에 engine 저장
+   * 2. MLCEngine 생성 (메인 스레드)
+   * 3. 모델 다운로드 및 로드
+   * 4. Zustand에 engine 저장
    *
    * @throws LLMError (WEBGPU_NOT_SUPPORTED 또는 MODEL_LOAD_FAILED)
    *
@@ -70,14 +97,12 @@ export function useLLM() {
    * - 실패 시 status = 'error', 성공 시 status = 'ready'
    */
   const initialize = useCallback(async () => {
-    // 이미 로딩 중이거나 준비됨
     if (status === 'loading' || status === 'ready') return;
 
     try {
       setStatus('loading');
       setError(null);
 
-      // WebGPU 지원 확인 (필수)
       if (!('gpu' in navigator)) {
         throw new LLMError(
           'WEBGPU_NOT_SUPPORTED',
@@ -85,35 +110,27 @@ export function useLLM() {
         );
       }
 
-      // Worker 생성 — new URL() 패턴은 Next.js 13+ webpack이 자동 처리
-      const worker = new Worker(
-        new URL('../workers/llm.worker.ts', import.meta.url),
-        { type: 'module' }
-      );
-      workerRef.current = worker;
-
-      // WebLLM 엔진 생성
-      const eng = await CreateWebWorkerMLCEngine(worker, MODEL_ID, {
-        initProgressCallback: (report) => {
-          setLoadProgress({
-            progress: report.progress,
-            text: report.text,
-            timeElapsed: report.timeElapsed,
-          });
-        },
+      const eng = new MLCEngine();
+      // eng.setAppConfig(buildAppConfig());
+      eng.setInitProgressCallback((report) => {
+        setLoadProgress({
+          progress: report.progress,
+          text: report.text,
+          timeElapsed: report.timeElapsed,
+        });
       });
+
+      await eng.reload(MODEL_ID);
 
       setEngine(eng);
       setStatus('ready');
     } catch (err) {
       const isLLMError = err instanceof LLMError;
-      const message = isLLMError
-        ? err.message
-        : 'Failed to load AI model. Check your connection and try again.';
-      const code = isLLMError
-        ? err.code
-        : ('MODEL_LOAD_FAILED' as LLMErrorCode);
+      const originalMessage = err instanceof Error ? err.message : String(err);
+      const message = isLLMError ? err.message : originalMessage;
+      const code = isLLMError ? err.code : ('MODEL_LOAD_FAILED' as LLMErrorCode);
 
+      console.debug('[useLLM] initialize error:', err);
       setError(message);
       setStatus('error');
 
@@ -234,9 +251,20 @@ export function useLLM() {
    * - initialize() 전에는 호출 불필요
    */
   const destroy = useCallback(() => {
-    workerRef.current?.terminate();
-    workerRef.current = null;
     useLLMStore.getState().reset();
+  }, []);
+
+  /**
+   * 모델이 브라우저 캐시에 있는지 확인합니다.
+   *
+   * @returns 캐시 존재 여부 (확인 실패 시 false 반환)
+   */
+  const checkCache = useCallback(async (): Promise<boolean> => {
+    try {
+      return await hasModelInCache(MODEL_ID);
+    } catch {
+      return false;
+    }
   }, []);
 
   return {
@@ -244,6 +272,7 @@ export function useLLM() {
     generate,
     generateFeedback,
     destroy,
+    checkCache,
     status,
   };
 }

@@ -464,3 +464,23 @@ Claude Code에서 작업 시작할 때 아래처럼 요청하면 컨텍스트를
 "useLLM 훅 CLAUDE.md 패턴 참고해서 구현해줘, 스트리밍 포함"
 "DiaryEditor 컴포넌트 만들어줘 — 모드 A/B 탭 전환, Tailwind 스타일링"
 ```
+
+## Skill routing
+
+When the user's request matches an available skill, ALWAYS invoke it using the Skill
+tool as your FIRST action. Do NOT answer directly, do NOT use other tools first.
+The skill has specialized workflows that produce better results than ad-hoc answers.
+
+Key routing rules:
+- Product ideas, "is this worth building", brainstorming → invoke office-hours
+- Bugs, errors, "why is this broken", 500 errors → invoke investigate
+- Ship, deploy, push, create PR → invoke ship
+- QA, test the site, find bugs → invoke qa
+- Code review, check my diff → invoke review
+- Update docs after shipping → invoke document-release
+- Weekly retro → invoke retro
+- Design system, brand → invoke design-consultation
+- Visual audit, design polish → invoke design-review
+- Architecture review → invoke plan-eng-review
+- Save progress, checkpoint, resume → invoke checkpoint
+- Code quality, health check → invoke health

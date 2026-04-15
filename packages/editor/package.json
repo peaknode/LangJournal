@@ -1,0 +1,44 @@
+{
+  "name": "@langjournal/editor",
+  "version": "1.0.0",
+  "description": "LangJournal editor — the web-based editor for creating and editing journal entries",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "0jo-gil",
+  "license": "ISC",
+  "dependencies": {
+    "@langjournal/core": "workspace:*",
+    "@tiptap/core": "^3.22.3",
+    "@tiptap/pm": "^3.22.3",
+    "@tiptap/react": "^3.22.3",
+    "@tiptap/starter-kit": "^3.22.3"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@langjournal/eslint-config": "workspace:*",
+    "@langjournal/typescript-config": "workspace:*",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "typescript": "5.9.2"
+  }
+}
