@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useLLM } from "../../src/hooks/useLLM";
+import { useLLM } from "../../hooks/useLLM";
 
 /**
  * LLM 초기화 상태를 표시하는 컴포넌트

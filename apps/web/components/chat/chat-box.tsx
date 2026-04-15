@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useLLM } from "../../src/hooks/useLLM";
-import { useLLMStore } from "../../src/lib/store";
+import { useLLM } from "../../hooks/useLLM";
+import { useLLMStore } from "../../lib/store";
 import { ModelLoading } from "./model-loading";
 import {
   buildConversationMessages,

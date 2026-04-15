@@ -1,5 +1,6 @@
 // 훅
 export { useEditorWithFeedback } from './hooks/useEditorWithFeedback.js';
+export { useEditor } from './hooks/useEditor.js';
 
 // 컴포넌트
 export { FeedbackTooltip } from './components/FeedbackTooltip.js';

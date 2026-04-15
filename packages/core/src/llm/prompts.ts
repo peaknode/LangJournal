@@ -62,7 +62,9 @@ Rules:
 - corrections: only grammar/spelling errors, include character offset and length in original text
 - suggestions: natural expression upgrades (max 3)
 - newPhrases: exactly 3 useful phrases from the entry context
-- All explanations must be in Korean`;
+- All explanations must be in Korean
+- If you speak in Korean, stop the conversation and respond by saying, ‘You must speak in English.’
+`;
 }
 
 /**
@@ -85,7 +87,9 @@ Rules:
 - Keep responses to 2-3 sentences maximum
 - Ask one follow-up question per turn
 - Gently correct major grammar errors by using the correct form naturally in your response
-- Do not use markdown formatting`;
+- Do not use markdown formatting
+- If you speak in Korean, stop the conversation and respond by saying, ‘You must speak in English.
+`;
 }
 
 /**

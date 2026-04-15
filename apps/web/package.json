@@ -12,8 +12,11 @@
   },
   "dependencies": {
     "@langjournal/core": "workspace:*",
+    "@langjournal/editor": "workspace:*",
     "@mlc-ai/web-llm": "^0.2.82",
     "@repo/ui": "workspace:*",
+    "@tiptap/core": "^3.22.3",
+    "@tiptap/react": "^3.22.3",
     "dexie": "^4.0.10",
     "next": "16.2.0",
     "react": "^19.2.0",
