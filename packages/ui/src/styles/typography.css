@@ -1,0 +1,107 @@
+@layer components {
+  /* Display Styles - Using Lexend font for high-end magazine feel */
+  .display-lg {
+    @apply text-[3.5rem] font-bold leading-tight font-display letter-spacing-tighter;
+  }
+
+  .display-md {
+    @apply text-[2.25rem] font-bold leading-tight font-display letter-spacing-tighter;
+  }
+
+  .display-sm {
+    @apply text-[1.875rem] font-bold leading-tight font-display letter-spacing-tighter;
+  }
+
+  /* Headline Styles - Kitschy friendliness */
+  .headline-lg {
+    @apply text-[1.875rem] font-semibold leading-snug font-display letter-spacing-tighter;
+  }
+
+  .headline-md {
+    @apply text-[1.5rem] font-semibold leading-snug font-display letter-spacing-tighter;
+  }
+
+  .headline-sm {
+    @apply text-[1.25rem] font-semibold leading-snug font-display letter-spacing-tighter;
+  }
+
+  /* Title Styles - Clean professional balance */
+  .title-lg {
+    @apply text-[1.25rem] font-semibold leading-normal font-body;
+  }
+
+  .title-md {
+    @apply text-[1.125rem] font-semibold leading-normal font-body;
+  }
+
+  .title-sm {
+    @apply text-[1rem] font-semibold leading-normal font-body;
+  }
+
+  /* Body Styles - High legibility with generous line height */
+  .body-lg {
+    @apply text-[1.125rem] font-normal leading-[1.75] font-body;
+  }
+
+  .body-md {
+    @apply text-[1rem] font-normal leading-[1.6] font-body;
+  }
+
+  .body-sm {
+    @apply text-[0.875rem] font-normal leading-[1.6] font-body;
+  }
+
+  /* Label Styles */
+  .label-lg {
+    @apply text-[0.875rem] font-semibold leading-normal font-body uppercase letter-spacing-wide;
+  }
+
+  .label-md {
+    @apply text-[0.75rem] font-semibold leading-normal font-body uppercase letter-spacing-wider;
+  }
+
+  .label-sm {
+    @apply text-[0.625rem] font-semibold leading-normal font-body uppercase letter-spacing-wider;
+  }
+
+  /* Card - Nested stacked paper effect */
+  .card-container {
+    @apply bg-surface-container-low rounded-xl p-8 space-y-6;
+  }
+
+  .card-item {
+    @apply bg-surface-container-lowest rounded-xl p-6;
+  }
+
+  .card-divider {
+    @apply h-8;
+  }
+
+  /* Chip - Pill-shaped selection elements */
+  .chip {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high text-on-surface font-medium text-sm transition-colors;
+  }
+
+  .chip-selected {
+    @apply bg-tertiary-container text-on-tertiary-container;
+  }
+
+  /* AI Conversation Bubbles */
+  .bubble-user {
+    @apply bg-secondary-container text-on-secondary-container px-4 py-3 rounded-[2rem_2rem_0.5rem_2rem] max-w-xs;
+  }
+
+  .bubble-ai {
+    @apply bg-tertiary-container text-on-tertiary-container px-4 py-3 rounded-[2rem_0.5rem_2rem_2rem] max-w-xs;
+  }
+
+  /* Glassmorphism - For floating modals */
+  .glass {
+    @apply bg-surface/80 backdrop-blur-[20px] rounded-xl border border-outline-variant/30;
+  }
+
+  /* Gradient CTA - Hero buttons */
+  .gradient-cta {
+    @apply bg-gradient-to-br from-primary to-primary-container hover:opacity-90 transition-opacity;
+  }
+}

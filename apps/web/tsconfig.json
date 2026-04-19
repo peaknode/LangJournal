@@ -9,14 +9,14 @@
         "strictNullChecks": true,
         "paths": {
             "@/*": [
-                "./src/*"
+                "./*"
             ],
-            "@langjournal/editor/*": [
-                "../../packages/editor/src/*"
+            "@langjournal/core/*": [
+                "../../packages/core/src/*"
             ],
             "@langjournal/ui/*": [
                 "../../packages/ui/src/*"
-            ],
+            ]
         }
     },
     "include": [
