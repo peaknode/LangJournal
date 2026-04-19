@@ -1,19 +1,32 @@
 {
-  "extends": "@langjournal/typescript-config/nextjs.json",
-  "compilerOptions": {
-    "plugins": [
-      {
-        "name": "next"
-      }
+    "extends": "@langjournal/typescript-config/nextjs.json",
+    "compilerOptions": {
+        "plugins": [
+            {
+                "name": "next"
+            }
+        ],
+        "strictNullChecks": true,
+        "paths": {
+            "@/*": [
+                "./src/*"
+            ],
+            "@langjournal/editor/*": [
+                "../../packages/editor/src/*"
+            ],
+            "@langjournal/ui/*": [
+                "../../packages/ui/src/*"
+            ],
+        }
+    },
+    "include": [
+        "**/*.ts",
+        "**/*.tsx",
+        "next-env.d.ts",
+        "next.config.js",
+        ".next/types/**/*.ts"
     ],
-    "strictNullChecks": true
-  },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "next-env.d.ts",
-    "next.config.js",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": ["node_modules"]
+    "exclude": [
+        "node_modules"
+    ]
 }

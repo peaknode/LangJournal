@@ -7,26 +7,27 @@
  * @type {import('next').NextConfig}
  */
 const nextConfig = {
-  /**
-   * HTTP 헤더 설정
-   */
-  // headers: async () => [
-  //   {
-  //     source: '/(.*)',
-  //     headers: [
-  //       {
-  //         key: 'Cross-Origin-Opener-Policy',
-  //         value: 'same-origin',
-  //       },
-  //       {
-  //         key: 'Cross-Origin-Embedder-Policy',
-  //         value: 'credentialless',
-  //       },
-  //     ],
-  //   },
-  // ],
-
-  // HuggingFace 프록시는 app/hf-proxy/[...path]/route.ts 에서 처리합니다.
+    /**
+     * HTTP 헤더 설정
+     */
+    // headers: async () => [
+    //   {
+    //     source: '/(.*)',
+    //     headers: [
+    //       {
+    //         key: 'Cross-Origin-Opener-Policy',
+    //         value: 'same-origin',
+    //       },
+    //       {
+    //         key: 'Cross-Origin-Embedder-Policy',
+    //         value: 'credentialless',
+    //       },
+    //     ],
+    //   },
+    // ],
+    pageExtensions: ["ts", "tsx"],
+    reactStrictMode: true,
+    transpilePackages: ['@langjournal/editor', '@langjournal/ui'],
 };
 
 export default nextConfig;
