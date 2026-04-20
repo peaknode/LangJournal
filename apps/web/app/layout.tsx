@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { feedbackStyles } from "@langjournal/editor";
 import { SidebarProvider } from "@langjournal/ui/components/sidebar";
 import { AppSidebar } from "../components";
 
@@ -25,6 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
+      <head>
+        <style dangerouslySetInnerHTML={{ __html: feedbackStyles }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} bg-[#FDFCF8]`}
       >
