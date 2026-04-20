@@ -1,6 +1,9 @@
 "use client";
 
+import { createContext, useContext } from "react";
 import { FormProvider, useForm } from "react-hook-form";
+import { useEditorWithFeedback } from "@langjournal/editor";
+import type { Editor } from "@tiptap/react";
 
 /**
  * 일기 작성/수정 폼의 값을 정의하는 타입입니다.
@@ -11,6 +14,25 @@ export interface DiaryFormValues {
   date: Date;
   /** 목표 언어로 작성한 본문 (Tiptap HTML) */
   content: string;
+}
+
+interface EditorContextType {
+  editor: any;
+  setFeedback: (feedback: any) => void;
+  activeTooltip: any;
+  onTooltipMouseEnter: () => void;
+  onTooltipMouseLeave: () => void;
+}
+
+/** Editor 컨텍스트 */
+const EditorContext = createContext<EditorContextType | undefined>(undefined);
+
+export function useSharedEditor() {
+  const context = useContext(EditorContext);
+  if (!context) {
+    throw new Error('useSharedEditor must be used within DiaryFormProvider');
+  }
+  return context;
 }
 
 interface DiaryFormProviderProps {
@@ -40,5 +62,11 @@ export const DiaryFormProvider = ({
     },
   });
 
-  return <FormProvider {...methods}>{children}</FormProvider>;
+  const editorContext = useEditorWithFeedback();
+
+  return (
+    <EditorContext.Provider value={editorContext}>
+      <FormProvider {...methods}>{children}</FormProvider>
+    </EditorContext.Provider>
+  );
 };

@@ -1,29 +1,31 @@
 "use client";
 
-import { Toolbar, useEditorWithFeedback, FeedbackTooltip } from "@langjournal/editor";
 import { EditorContent } from "@tiptap/react";
 import { MenuBar } from "./menu-bar";
-import { useLLM } from "@/hooks/useLLM";
-import { useRealtimeFeedback } from "@/hooks/useRealtimeFeedback";
+import { useSharedEditor } from "@/components/diary/edit/diary-form-provider";
+import { FeedbackTooltip } from "@langjournal/editor";
+import { useEffect } from "react";
 
 export const ContentEditor = () => {
-    const { initialize, status } = useLLM();
     const {
         editor,
-        setFeedback,
         activeTooltip,
         onTooltipMouseEnter,
-        onTooltipMouseLeave,
-    } = useEditorWithFeedback();
+        onTooltipMouseLeave
+    } = useSharedEditor();
 
-    const { isAnalyzing } = useRealtimeFeedback(editor, setFeedback);
+    useEffect(() => {
+        console.log('[ContentEditor] editor:', editor);
+        console.log('[ContentEditor] activeTooltip:', activeTooltip);
+    }, [editor, activeTooltip]);
+
 
     return (
         <>
             <MenuBar editor={editor} />
 
             {/* AI 상태 배너 */}
-            {status === 'idle' && (
+            {/* {status === 'idle' && (
                 <div className="px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <button
                         onClick={initialize}
@@ -42,7 +44,7 @@ export const ContentEditor = () => {
                 <div className="px-4 py-3 bg-green-50 border border-green-200 rounded-lg">
                     <p className="text-sm text-green-700">분석 중...</p>
                 </div>
-            )}
+            )} */}
 
             <div className="py-4">
                 <EditorContent editor={editor} />
@@ -53,6 +55,7 @@ export const ContentEditor = () => {
                 onMouseEnter={onTooltipMouseEnter}
                 onMouseLeave={onTooltipMouseLeave}
             />
+
         </>
     );
 };

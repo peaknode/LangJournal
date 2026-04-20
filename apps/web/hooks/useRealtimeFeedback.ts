@@ -25,63 +25,69 @@ import { useLLM } from './useLLM';
  * const { isAnalyzing } = useRealtimeFeedback(editor, setFeedback, 'en');
  */
 export function useRealtimeFeedback(
-  editor: Editor | null,
-  setFeedback: (record: FeedbackRecord) => void,
-  targetLanguage: Language = 'en',
+    editor: Editor | null,
+    setFeedback: (record: FeedbackRecord) => void,
+    targetLanguage: Language = 'en',
 ): { isAnalyzing: boolean } {
-  const { generateFeedback, status } = useLLM();
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingRef = useRef(false);
+    const { generateFeedback, status } = useLLM();
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pendingRef = useRef(false);
 
-  const triggerAnalysis = useCallback(async () => {
-    if (!editor || status !== 'ready' || pendingRef.current) return;
+    const triggerAnalysis = useCallback(async () => {
+        if (!editor || status !== 'ready' || pendingRef.current) return;
 
-    const text = editor.getText().trim();
-    if (text.length < 10) return;
 
-    pendingRef.current = true;
+        const text = editor.getText().trim();
+        if (text.length < 10) return;
 
-    try {
-      const entry: DiaryEntry = {
-        id: 'draft',
-        date: new Date().toISOString().slice(0, 10),
-        targetLanguage,
-        nativeText: '',
-        targetText: text,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
+        pendingRef.current = true;
 
-      const messages: ChatMessage[] = [
-        { role: 'user', content: buildFeedbackPrompt(entry) },
-      ];
+        try {
+            const entry: DiaryEntry = {
+                id: 'draft',
+                date: new Date().toISOString().slice(0, 10),
+                targetLanguage,
+                nativeText: '',
+                targetText: text,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+            };
 
-      const feedback = await generateFeedback(messages);
-      if (feedback) {
-        setFeedback(feedback);
-      }
-    } catch (err) {
-      // 에러 조용히 처리 — 사용자 타이핑 방해 X
-      console.debug('[useRealtimeFeedback] analysis failed:', err);
-    } finally {
-      pendingRef.current = false;
-    }
-  }, [editor, status, targetLanguage, generateFeedback, setFeedback]);
+            console.log('entry ::::::: ', entry);
 
-  useEffect(() => {
-    if (!editor) return;
+            const messages: ChatMessage[] = [
+                { role: 'user', content: buildFeedbackPrompt(entry) },
+            ];
 
-    const handleUpdate = () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(triggerAnalysis, 2000);
-    };
+            const feedback = await generateFeedback(messages);
+            console.debug('[useRealtimeFeedback] analysis result:', feedback);
+            if (feedback) {
+                setFeedback(feedback);
+            }
+        } catch (err) {
+            // 에러 조용히 처리 — 사용자 타이핑 방해 X
+            console.debug('[useRealtimeFeedback] analysis failed:', err);
+        } finally {
+            pendingRef.current = false;
+        }
+    }, [editor, status, targetLanguage, generateFeedback, setFeedback]);
 
-    editor.on('update', handleUpdate);
-    return () => {
-      editor.off('update', handleUpdate);
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [editor, triggerAnalysis]);
+    useEffect(() => {
+        if (!editor) return;
 
-  return { isAnalyzing: status === 'generating' };
+
+        const handleUpdate = () => {
+            console.log('????')
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+            debounceRef.current = setTimeout(triggerAnalysis, 2000);
+        };
+
+        editor.on('update', handleUpdate);
+        return () => {
+            editor.off('update', handleUpdate);
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+        };
+    }, [editor, triggerAnalysis]);
+
+    return { isAnalyzing: status === 'generating' };
 }

@@ -139,7 +139,7 @@
         font-family: var(--font-display);
         font-weight: 600;
         letter-spacing: -0.02em;
-        margin-bottom: 1rem;
+        /* margin-bottom: 1rem; */
     }
 
     h1 {
@@ -160,7 +160,7 @@
     /* Body text with generous line-height for stationery feel */
     p {
         line-height: 1.6;
-        margin-bottom: 1rem;
+        /* margin-bottom: 1rem; */
     }
 
     /* No pure black - use on-surface color */

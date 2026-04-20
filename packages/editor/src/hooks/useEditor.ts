@@ -7,18 +7,22 @@ import { Text } from "@tiptap/extension-text";
 import { Placeholder } from "@tiptap/extension-placeholder";
 
 export const useEditor = () => {
-  const editor = useTiptapEditor({
-    extensions: [
-      StarterKit,
-      FeedbackHighlight.configure({
-        HTMLAttributes: {
-          class: 'feedback-highlight',
-        },
-      }),
-    ],
-    immediatelyRender: false,
-  })
-  return editor
+    const editor = useTiptapEditor({
+        extensions: [
+            StarterKit,
+            FeedbackHighlight.configure({
+                HTMLAttributes: {
+                    class: 'feedback-highlight',
+                },
+            }),
+            Text,
+            Placeholder.configure({
+                placeholder: "Start writing your thoughts...",
+            }),
+        ],
+        immediatelyRender: false,
+    })
+    return editor
 }
 
 /**
@@ -26,21 +30,21 @@ export const useEditor = () => {
  * @returns
  */
 export const useTitleEditor = () => {
-  const editor = useTiptapEditor({
-    extensions: [
-      Document.extend({
-        content: "heading",
-      }),
-      Heading.configure({
-        levels: [1],
-      }),
-      Text,
-      Placeholder.configure({
-        placeholder: "Title of your entry...",
-        showOnlyWhenEditable: false,
-      }),
-    ],
-    immediatelyRender: false,
-  })
-  return editor
+    const editor = useTiptapEditor({
+        extensions: [
+            Document.extend({
+                content: "heading",
+            }),
+            Heading.configure({
+                levels: [1],
+            }),
+            Text,
+            Placeholder.configure({
+                placeholder: "Title of your entry...",
+                // showOnlyWhenEditable: true,
+            }),
+        ],
+        immediatelyRender: false,
+    })
+    return editor
 }
