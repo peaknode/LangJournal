@@ -6,9 +6,13 @@ import { TitleEditor } from "@/components/editor/title-editor";
 export default function DiaryCreatePage() {
   return (
     <DiaryFormProvider>
-      <DiaryHeader />
-      <TitleEditor />
-      <ContentEditor />
+      <div className="w-full h-full flex flex-col">
+        <DiaryHeader />
+        <div className="flex-1 w-full h-full tiptap">
+          <TitleEditor />
+          <ContentEditor />
+        </div>
+      </div>
     </DiaryFormProvider>
   );
 }

@@ -30,7 +30,7 @@ export default function RootLayout({
       >
         <SidebarProvider>
           <AppSidebar />
-          <main className="w-full h-full p-4">{children}</main>
+          <main className="w-full h-screen p-4">{children}</main>
         </SidebarProvider>
       </body>
     </html>

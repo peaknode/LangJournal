@@ -17,6 +17,10 @@ a {
     font-family: var(--font-body);
     line-height: 1.6;
 
+    &.ProseMirror.ProseMirror-focused {
+        outline: none !important;
+    }
+
     :first-child {
         margin-top: 0;
     }
