@@ -1,10 +1,10 @@
 "use client";
 
-import { useEditor } from "@langjournal/editor";
+import { Toolbar, useEditor } from "@langjournal/editor";
 import { EditorContent } from "@tiptap/react";
 import { MenuBar } from "./menu-bar";
 
-export const Editor = () => {
+export const ContentEditor = () => {
   const editor = useEditor();
   return (
     <>

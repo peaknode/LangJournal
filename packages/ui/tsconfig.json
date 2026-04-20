@@ -1,20 +1,13 @@
 {
-    "extends": "@langjournal/typescript-config/react-library.json",
-    "compilerOptions": {
-        "outDir": "dist",
-        "strictNullChecks": true,
-        "paths": {
-            "@langjournal/ui/*": [
-                "src/*"
-            ]
-        }
-    },
-    "include": [
-        "**/*.ts",
-        "**/*.tsx"
-    ],
-    "exclude": [
-        "node_modules",
-        "dist"
-    ]
+  "extends": "@langjournal/typescript-config/react-library.json",
+  "compilerOptions": {
+    "rootDir": "./",
+    "outDir": "dist",
+    "strictNullChecks": false,
+    "paths": {
+      "@langjournal/ui/*": ["src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
 }

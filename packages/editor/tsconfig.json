@@ -2,14 +2,13 @@
   "extends": "@langjournal/typescript-config/base.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "outDir": "./dist",
-    "rootDir": "./src",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "outDir": "dist",
+    "rootDir": "./",
     "declaration": true,
     "declarationMap": true,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "paths": {
-      "@": ["./src"],
       "@/*": ["./src/*"]
     }
   },

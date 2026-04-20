@@ -1,23 +1,23 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Slot } from "radix-ui"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Slot } from "radix-ui";
 
-import { cn } from "@langjournal/ui/lib/utils"
+import { cn } from "@langjournal/ui/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-2 font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 cursor-pointer",
   {
     variants: {
       variant: {
-        default: "bg-primary-container text-on-primary-container hover:bg-opacity-80 shadow-[0_2px_0_rgba(207,252,0,0.3)] dark:shadow-[0_2px_0_rgba(80,99,0,0.3)]",
+        default:
+          "bg-primary-container text-on-primary-container hover:bg-opacity-80 shadow-[0_2px_0_rgba(207,252,0,0.3)] dark:shadow-[0_2px_0_rgba(80,99,0,0.3)]",
         destructive:
           "bg-secondary text-on-secondary hover:bg-opacity-80 focus-visible:ring-secondary/20 dark:focus-visible:ring-secondary/40",
         outline:
           "bg-surface-container-lowest text-on-surface hover:bg-surface-container-low border border-outline-variant",
         secondary:
           "bg-secondary-container text-on-secondary-container hover:bg-opacity-90",
-        ghost:
-          "hover:bg-surface-container-low text-on-surface",
+        ghost: "hover:bg-surface-container-low text-on-surface",
         link: "text-primary-container underline-offset-4 hover:underline",
       },
       size: {
@@ -36,8 +36,8 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  }
-)
+  },
+);
 
 function Button({
   className,
@@ -47,9 +47,9 @@ function Button({
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
+    asChild?: boolean;
   }) {
-  const Comp = asChild ? Slot.Root : "button"
+  const Comp = asChild ? Slot.Root : "button";
 
   return (
     <Comp
@@ -59,7 +59,7 @@ function Button({
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />
-  )
+  );
 }
 
-export { Button, buttonVariants }
+export { Button, buttonVariants };
