@@ -58,7 +58,7 @@ export const DiaryList = () => {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full py-10.5">
       {groups.map((group) => (
         <section key={group.key}>
           {/* 월 헤더 */}
