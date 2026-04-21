@@ -46,6 +46,9 @@
     --radius-3xl: 3rem;
     --radius-4xl: 3rem;
     --radius-full: 9999px;
+
+    --font-display: 'Lexend', sans-serif;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
 }
 
 :root {

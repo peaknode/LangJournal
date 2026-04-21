@@ -1,47 +1,94 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import type { DiaryEntry } from '@langjournal/core';
-import { DiaryListItem } from './diary-list-item';
+import { useEffect, useMemo, useRef } from "react";
+import { useInfiniteEntries } from "@/hooks/useInfiniteEntries";
+import { groupEntriesByMonth } from "@/lib/date-utils";
+import { DiaryListItem } from "./diary-list-item";
 
 /**
- * 일기 목록을 Bento 스타일 그리드로 렌더링합니다.
- * 최신 항목을 featured entry로 표시하고, 나머지는 표준 카드로 표시합니다.
+ * 일기 목록을 월별 타임라인으로 렌더링합니다.
+ * IntersectionObserver를 활용한 무한스크롤을 지원합니다.
  *
- * @param entries - 렌더링할 일기 항목 배열 (최신순 정렬되어 있다고 가정)
- * @returns 그리드 레이아웃의 일기 목록
+ * @returns 월별 그룹핑된 타임라인 리스트
  */
-export const DiaryList = ({ entries }: { entries: DiaryEntry[] }) => {
-  const { featured, standard } = useMemo(() => {
-    if (entries.length === 0) {
-      return { featured: null, standard: [] };
-    }
-    return {
-      featured: entries[0],
-      standard: entries.slice(1),
-    };
-  }, [entries]);
+export const DiaryList = () => {
+  const { entries, loading, loadingMore, hasMore, loadMore } =
+    useInfiniteEntries();
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const groups = useMemo(() => groupEntriesByMonth(entries), [entries]);
+
+  /** IntersectionObserver로 스크롤 하단 감지 */
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (observerEntries) => {
+        if (observerEntries[0]?.isIntersecting && hasMore && !loadingMore) {
+          loadMore();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, loadMore]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (entries.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <span className="material-symbols-outlined text-zinc-300 text-5xl mb-4">
+          edit_note
+        </span>
+        <p className="text-zinc-500 font-body">
+          No entries yet. Start writing your first diary!
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {/* Featured Entry */}
-      {featured && (
-        <DiaryListItem entry={featured} isFeatured />
-      )}
+    <div className="w-full">
+      {groups.map((group) => (
+        <section key={group.key}>
+          {/* 월 헤더 */}
+          <div className="sticky top-0 z-10 dark:bg-zinc-950/80 backdrop-blur-sm py-3 px-1">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400">
+              {group.label}
+            </h2>
+          </div>
 
-      {/* Standard Entries */}
-      {standard.map((entry) => (
-        <DiaryListItem key={entry.id} entry={entry} />
+          {/* 해당 월의 일기 항목들 */}
+          {group.entries.map((entry) => (
+            <DiaryListItem key={entry.id} entry={entry} />
+          ))}
+        </section>
       ))}
 
-      {/* Add New Entry Card */}
-      <div className="bg-[#F3F4ED] dark:bg-zinc-800/50 rounded-lg p-6 border-2 border-dashed border-zinc-300 dark:border-zinc-700 diary-card flex flex-col justify-center items-center text-center cursor-pointer hover:border-lime-400 transition-colors">
-        <div className="w-16 h-16 rounded-full bg-white dark:bg-zinc-900 flex items-center justify-center mb-4 shadow-sm">
-          <span className="material-symbols-outlined text-lime-500 text-3xl">add</span>
+      {/* 무한스크롤 센티넬 */}
+      <div ref={sentinelRef} className="h-1" />
+
+      {loadingMore && (
+        <div className="flex justify-center py-6">
+          <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-600 rounded-full animate-spin" />
         </div>
-        <p className="text-zinc-900 dark:text-zinc-50 font-headline font-bold mb-1">Quick Reflection?</p>
-        <p className="text-xs text-zinc-500 font-label">Capture a fleeting thought before it's gone.</p>
-      </div>
+      )}
+
+      {!hasMore && entries.length > 0 && (
+        <p className="text-center text-xs text-zinc-400 py-6 font-label">
+          All entries loaded
+        </p>
+      )}
     </div>
   );
 };

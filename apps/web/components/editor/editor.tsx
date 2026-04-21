@@ -6,26 +6,25 @@ import { useSharedEditor } from "@/components/diary/edit/diary-form-provider";
 import { FeedbackTooltip } from "@langjournal/editor";
 import { useEffect } from "react";
 
-export const ContentEditor = () => {
-    const {
-        editor,
-        activeTooltip,
-        onTooltipMouseEnter,
-        onTooltipMouseLeave
-    } = useSharedEditor();
+interface Props {
+  content?: string;
+}
 
-    useEffect(() => {
-        console.log('[ContentEditor] editor:', editor);
-        console.log('[ContentEditor] activeTooltip:', activeTooltip);
-    }, [editor, activeTooltip]);
+export const ContentEditor = ({ content }: Props) => {
+  const { editor, activeTooltip, onTooltipMouseEnter, onTooltipMouseLeave } =
+    useSharedEditor();
 
+  useEffect(() => {
+    if (!content) return;
+    editor?.commands.setContent(content);
+  }, [content]);
 
-    return (
-        <>
-            <MenuBar editor={editor} />
+  return (
+    <>
+      <MenuBar editor={editor} />
 
-            {/* AI 상태 배너 */}
-            {/* {status === 'idle' && (
+      {/* AI 상태 배너 */}
+      {/* {status === 'idle' && (
                 <div className="px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <button
                         onClick={initialize}
@@ -46,16 +45,15 @@ export const ContentEditor = () => {
                 </div>
             )} */}
 
-            <div className="py-4">
-                <EditorContent editor={editor} />
-            </div>
+      <div className="py-4">
+        <EditorContent editor={editor} />
+      </div>
 
-            <FeedbackTooltip
-                tooltip={activeTooltip}
-                onMouseEnter={onTooltipMouseEnter}
-                onMouseLeave={onTooltipMouseLeave}
-            />
-
-        </>
-    );
+      <FeedbackTooltip
+        tooltip={activeTooltip}
+        onMouseEnter={onTooltipMouseEnter}
+        onMouseLeave={onTooltipMouseLeave}
+      />
+    </>
+  );
 };
