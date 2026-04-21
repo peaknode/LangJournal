@@ -10,71 +10,30 @@ import {
   Command,
   Frame,
   GalleryVerticalEnd,
+  LucidePencilLine,
+  MessageCircle,
   PieChart,
   SquareTerminal,
 } from "lucide-react";
 import { NavMain } from "./nav-main";
-// This is sample data.
+import { Typography } from "@langjournal/ui/components/typography";
+import Link from "next/link";
+
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
   navMain: [
     {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: "Archives",
-          url: "/diary",
-        },
-        {
-          title: "Chat",
-          url: "/chat",
-        },
-        {
-          title: "Conversation",
-          url: "/conversation",
-        },
-      ],
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
+      title: "Archives",
+      url: "/diary",
+      icon: LucidePencilLine,
     },
     {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
+      title: "Chat",
+      url: "/chat",
+      icon: MessageCircle,
     },
     {
-      name: "Travel",
-      url: "#",
-      icon: Map,
+      title: "Conversation",
+      url: "/conversation",
     },
   ],
 };
@@ -82,7 +41,16 @@ const data = {
 export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="bg-[#FDFCF8]">
-      <SidebarHeader></SidebarHeader>
+      <SidebarHeader>
+        <Link href="/">
+          <Typography
+            variant="display-sm"
+            className="text-zinc-900 dark:text-zinc-50"
+          >
+            LangJournal
+          </Typography>
+        </Link>
+      </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
       </SidebarContent>
