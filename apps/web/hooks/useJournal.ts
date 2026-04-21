@@ -1,7 +1,7 @@
 /**
  * 일기 CRUD 및 상태 관리 훅
  *
- * Dexie 데이터베이스를 래핑하여 일기의 생성, 조회, 수정을 처리합니다.
+ * Repository 패턴을 통해 일기의 생성, 조회, 수정을 처리합니다.
  * 직접 db에 접근하지 않고 이 훅을 경유해야 합니다.
  *
  * @module hooks/useJournal
@@ -10,8 +10,13 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { db } from '../lib/db';
-import type { DiaryEntry, FeedbackRecord, Language } from '@langjournal/core';
+import { entryRepository } from '../lib/repositories';
+import type {
+  DiaryEntry,
+  FeedbackRecord,
+  EntryFilter,
+  PaginationOptions,
+} from '@langjournal/core';
 
 /**
  * 오늘 날짜를 'YYYY-MM-DD' 형식으로 반환합니다.
@@ -56,10 +61,8 @@ export function useJournal(date: string = todayDate()) {
   useEffect(() => {
     let cancelled = false;
 
-    db.entries
-      .where('date')
-      .equals(date)
-      .first()
+    entryRepository
+      .findByDate(date)
       .then((e) => {
         if (!cancelled) {
           setEntry(e ?? null);
@@ -98,25 +101,21 @@ export function useJournal(date: string = todayDate()) {
       patch: Partial<
         Pick<
           DiaryEntry,
-          'nativeText' | 'targetText' | 'targetLanguage' | 'mood'
+          'title' | 'nativeText' | 'targetText' | 'targetLanguage' | 'mood'
         >
       >
     ) => {
       try {
         if (entry) {
           // 기존 일기 업데이트
-          const updated: DiaryEntry = {
-            ...entry,
-            ...patch,
-            updatedAt: Date.now(),
-          };
-          await db.entries.put(updated);
+          const updated = await entryRepository.update(entry.id, patch);
           setEntry(updated);
         } else {
           // 새 일기 생성
           const newEntry: DiaryEntry = {
             id: crypto.randomUUID(),
             date,
+            title: patch.title ?? '',
             targetLanguage: patch.targetLanguage ?? 'en',
             nativeText: patch.nativeText ?? '',
             targetText: patch.targetText ?? '',
@@ -124,8 +123,8 @@ export function useJournal(date: string = todayDate()) {
             createdAt: Date.now(),
             updatedAt: Date.now(),
           };
-          await db.entries.add(newEntry);
-          setEntry(newEntry);
+          const created = await entryRepository.create(newEntry);
+          setEntry(created);
         }
       } catch (err) {
         console.debug('Error saving entry:', err);
@@ -155,12 +154,7 @@ export function useJournal(date: string = todayDate()) {
           throw new Error('No entry to save feedback to');
         }
 
-        const updated: DiaryEntry = {
-          ...entry,
-          feedback,
-          updatedAt: Date.now(),
-        };
-        await db.entries.put(updated);
+        const updated = await entryRepository.saveFeedback(entry.id, feedback);
         setEntry(updated);
       } catch (err) {
         console.debug('Error saving feedback:', err);
@@ -183,31 +177,36 @@ export function useJournal(date: string = todayDate()) {
 }
 
 /**
- * 전체 일기 목록을 조회하는 훅
+ * 일기 목록을 조회하는 훅
  *
- * 날짜 역순(최신순)으로 모든 일기를 로드합니다.
- * 대시보드, 통계, 일기 목록 페이지에서 사용합니다.
+ * 필터 및 페이지네이션을 지원합니다.
+ * 기본 정렬은 날짜 역순(최신순)입니다.
  *
+ * @param filter - 조회 필터 (선택사항)
+ * @param pagination - 페이지네이션 옵션 (선택사항)
  * @returns 일기 배열
  *
  * @example
+ * // 전체 목록
  * const { entries } = useEntries();
  *
- * useEffect(() => {
- *   const stats = calcGrowthStats(entries);
- *   setStreak(stats.streak);
- * }, [entries]);
+ * // 영어 일기만, 10개씩
+ * const { entries } = useEntries(
+ *   { targetLanguage: 'en' },
+ *   { limit: 10, offset: 0 }
+ * );
  */
-export function useEntries() {
+export function useEntries(
+  filter?: EntryFilter,
+  pagination?: PaginationOptions
+) {
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
 
   useEffect(() => {
     let cancelled = false;
 
-    db.entries
-      .orderBy('date')
-      .reverse() // 최신순
-      .toArray()
+    entryRepository
+      .findMany(filter, pagination)
       .then((result) => {
         if (!cancelled) {
           setEntries(result);
@@ -222,7 +221,7 @@ export function useEntries() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [filter, pagination]);
 
   return { entries };
 }

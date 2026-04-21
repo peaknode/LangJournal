@@ -36,8 +36,10 @@ export function DatePicker({ ButtonComponent, onChange, value }: Props) {
               mode="single"
               selected={value || field.value}
               onSelect={(date) => {
-                onChange?.(date);
-                date && field.onChange(date);
+                if (date) {
+                  onChange?.(date);
+                  field.onChange(date);
+                }
               }}
               defaultMonth={value || field.value}
             />

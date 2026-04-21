@@ -46,6 +46,7 @@ export function useRealtimeFeedback(
             const entry: DiaryEntry = {
                 id: 'draft',
                 date: new Date().toISOString().slice(0, 10),
+                title: '',
                 targetLanguage,
                 nativeText: '',
                 targetText: text,
@@ -62,7 +63,7 @@ export function useRealtimeFeedback(
             const feedback = await generateFeedback(messages);
             console.debug('[useRealtimeFeedback] analysis result:', feedback);
             if (feedback) {
-                setFeedback(feedback);
+                setFeedback({ ...feedback, generatedAt: Date.now() });
             }
         } catch (err) {
             // 에러 조용히 처리 — 사용자 타이핑 방해 X

@@ -27,7 +27,7 @@ import type {
  * - 완전히 로컬 저장, 서버 동기화 없음
  * - 인덱스는 빈번한 쿼리 패턴 기준으로 설정
  */
-class LangJournalDB extends Dexie {
+export class LangJournalDB extends Dexie {
   /** 일기 테이블 (PK: id) */
   entries!: Table<DiaryEntry, string>;
 
@@ -67,6 +67,9 @@ export const db = new LangJournalDB();
  * @param date - 조회할 날짜 ('YYYY-MM-DD' 형식)
  * @returns 일기 또는 없으면 undefined
  *
+ * @deprecated entryRepository.findByDate(date) 를 사용하세요.
+ * @see DexieEntryRepository.findByDate
+ *
  * @example
  * const today = new Date().toISOString().slice(0, 10);
  * const entry = await getTodayEntry(today);
@@ -86,6 +89,9 @@ export async function getTodayEntry(
  * @param language - 어휘의 언어 코드
  * @param limit - 조회할 최대 개수 (기본값: 20)
  * @returns 복습 대상 어휘 배열
+ *
+ * @deprecated vocabRepository.findForReview(language, limit) 를 사용하세요.
+ * @see DexieVocabRepository.findForReview
  *
  * @example
  * const toReview = await getVocabForReview('en', 10);

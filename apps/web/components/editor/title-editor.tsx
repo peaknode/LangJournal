@@ -1,10 +1,10 @@
 "use client";
 
-import { useTitleEditor } from "@langjournal/editor";
+import { useTitleEditorContext } from "@/components/diary/edit/diary-form-provider";
 import { EditorContent } from "@tiptap/react";
 
 export const TitleEditor = () => {
-  const editor = useTitleEditor();
+  const { titleEditor } = useTitleEditorContext();
 
-  return <EditorContent editor={editor} className="title-editor" />;
+  return <EditorContent editor={titleEditor} className="title-editor" />;
 };

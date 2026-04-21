@@ -15,6 +15,7 @@ import * as webllm from "@mlc-ai/web-llm";
 const TEST_ENTRY: DiaryEntry = {
   id: "test-1",
   date: "2026-04-15",
+  title: "",
   targetLanguage: "en",
   nativeText: "오늘 카페에서 친구를 만나 오랜만에 이야기를 나눴다.",
   targetText:

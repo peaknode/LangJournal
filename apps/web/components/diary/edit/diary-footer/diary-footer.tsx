@@ -7,10 +7,16 @@ import { useSharedEditor } from "@/components/diary/edit/diary-form-provider";
 import { Icon } from "@langjournal/ui/components/icon";
 import { Typography } from "@langjournal/ui/components/typography";
 import { Save } from "lucide-react";
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useState } from "react";
 
-export const DiaryFooter = () => {
+interface DiaryFooterProps {
+    /** 저장 버튼 클릭 시 호출되는 콜백 */
+    onSave?: () => Promise<void> | void;
+}
+
+export const DiaryFooter = ({ onSave }: DiaryFooterProps) => {
     const { initialize, status } = useLLM();
+    const [isSaving, setIsSaving] = useState(false);
 
     useLayoutEffect(() => {
         // 페이지 진입 시 AI 모델 초기화
@@ -24,6 +30,17 @@ export const DiaryFooter = () => {
 
     const { isAnalyzing } = useRealtimeFeedback(editor, setFeedback);
 
+    const handleSave = async () => {
+        if (isSaving) return;
+        setIsSaving(true);
+        try {
+            await onSave?.();
+        } catch (err) {
+            console.debug('Error saving diary:', err);
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return (
         <div className="w-full flex flex-col items-end gap-4 mt-6">
@@ -33,9 +50,11 @@ export const DiaryFooter = () => {
                 style={{
                     boxShadow: '3px 3px 0px #000',
                     width: 'max-content'
-                }}>
+                }}
+                onClick={handleSave}
+                disabled={isSaving}>
                 <Save className="size-4" />
-                <Typography variant="body-md">Save Draft</Typography>
+                <Typography variant="body-md">{isSaving ? 'Saving...' : 'Save Draft'}</Typography>
             </Button>
 
             {/* AI 분석 */}

@@ -7,7 +7,7 @@ interface IconProps extends ImgHTMLAttributes<HTMLImageElement> {
 
 declare const require: {
     context: (path: string, useSubdirectories: boolean, regExp: RegExp) => {
-        (id: string): string;
+        (id: string): { default: { src: string } };
         keys(): string[];
     };
 };

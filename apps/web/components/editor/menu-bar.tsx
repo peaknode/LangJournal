@@ -63,13 +63,15 @@ const HeadingPopover = ({ editor }: { editor: Editor }) => {
 
     const activeOption =
         HEADING_OPTIONS.find((opt) => opt.level === activeLevel) ??
-        HEADING_OPTIONS[0];
+        HEADING_OPTIONS[0]!;
 
     const handleSelect = (level: Level | null) => {
         if (level === null) {
-            editor.chain().focus().setParagraph().run();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- setParagraph는 paragraph extension이 런타임에 주입
+            (editor.chain().focus() as any).setParagraph().run();
         } else {
-            editor.chain().focus().toggleHeading({ level }).run();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- toggleHeading은 heading extension이 런타임에 주입
+            (editor.chain().focus() as any).toggleHeading({ level }).run();
         }
         setOpen(false);
     };

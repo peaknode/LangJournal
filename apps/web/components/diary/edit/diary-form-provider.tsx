@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { useEditorWithFeedback } from "@langjournal/editor";
+import { useEditorWithFeedback, useTitleEditor } from "@langjournal/editor";
 import type { Editor } from "@tiptap/react";
 
 /**
@@ -27,10 +27,29 @@ interface EditorContextType {
 /** Editor 컨텍스트 */
 const EditorContext = createContext<EditorContextType | undefined>(undefined);
 
+interface TitleEditorContextType {
+  titleEditor: Editor | null;
+}
+
+/** Title Editor 컨텍스트 */
+const TitleEditorContext = createContext<TitleEditorContextType | undefined>(undefined);
+
 export function useSharedEditor() {
   const context = useContext(EditorContext);
   if (!context) {
     throw new Error('useSharedEditor must be used within DiaryFormProvider');
+  }
+  return context;
+}
+
+/**
+ * 공유 TitleEditor 인스턴스에 접근하는 훅
+ * DiaryFormProvider 하위에서만 사용 가능합니다.
+ */
+export function useTitleEditorContext() {
+  const context = useContext(TitleEditorContext);
+  if (!context) {
+    throw new Error('useTitleEditorContext must be used within DiaryFormProvider');
   }
   return context;
 }
@@ -63,10 +82,13 @@ export const DiaryFormProvider = ({
   });
 
   const editorContext = useEditorWithFeedback();
+  const titleEditor = useTitleEditor();
 
   return (
-    <EditorContext.Provider value={editorContext}>
-      <FormProvider {...methods}>{children}</FormProvider>
-    </EditorContext.Provider>
+    <TitleEditorContext.Provider value={{ titleEditor }}>
+      <EditorContext.Provider value={editorContext}>
+        <FormProvider {...methods}>{children}</FormProvider>
+      </EditorContext.Provider>
+    </TitleEditorContext.Provider>
   );
 };
