@@ -22,6 +22,7 @@ export type {
   VocabItem,
   ConversationMessage,
   ConversationSession,
+  ChatMessageRecord,
 } from './db/schema.js';
 
 // ============================================================================
