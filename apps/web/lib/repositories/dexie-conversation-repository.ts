@@ -1,101 +1,108 @@
 /**
- * Dexie.js 기반 대화 저장소 구현
+ * Dexie.js 기반 대화 저장소 구현.
  *
- * IConversationRepository 인터페이스의 웹(IndexedDB) 구현체입니다.
- * 대화 연습 세션을 로컬 IndexedDB에 저장하고 관리합니다.
+ * 세션 메타와 개별 메시지를 분리 관리한다. `appendMessage`는 `rw` 트랜잭션으로
+ * 메시지 삽입과 세션 갱신을 원자화한다.
  *
  * @module lib/repositories/dexie-conversation-repository
  */
 
+import Dexie from 'dexie';
 import type {
+  ChatMessageRecord,
   ConversationSession,
-  ConversationMessage,
   IConversationRepository,
+  PaginationOptions,
 } from '@langjournal/core';
 import type { LangJournalDB } from '../db';
 
-/**
- * IndexedDB(Dexie) 기반 대화 저장소
- *
- * 대화 세션의 저장, 조회, 메시지 추가를 처리합니다.
- * appendMessage는 Dexie transaction으로 원자성을 보장합니다.
- *
- * @example
- * import { db } from '../db';
- * const repo = new DexieConversationRepository(db);
- * const session = await repo.findByEntry('entry-123');
- */
 export class DexieConversationRepository implements IConversationRepository {
   constructor(private readonly db: LangJournalDB) {}
 
-  /**
-   * 대화 세션을 저장합니다.
-   *
-   * 기존 세션이 있으면 덮어씁니다 (upsert).
-   *
-   * @param session - 저장할 대화 세션
-   */
-  async save(session: ConversationSession): Promise<void> {
-    await this.db.conversations.put(session);
+  async listSessions(
+    pagination?: PaginationOptions
+  ): Promise<ConversationSession[]> {
+    let query = this.db.conversations.orderBy('updatedAt').reverse();
+    if (pagination) {
+      query = query.offset(pagination.offset).limit(pagination.limit);
+    }
+    return query.toArray();
   }
 
-  /**
-   * 특정 일기의 대화 세션을 조회합니다.
-   *
-   * @param entryId - 일기 ID
-   * @returns 대화 세션 또는 없으면 undefined
-   */
-  async findByEntry(
+  async findSession(
     entryId: string
   ): Promise<ConversationSession | undefined> {
     return this.db.conversations.get(entryId);
   }
 
-  /**
-   * 대화 세션에 새 메시지를 추가합니다.
-   *
-   * 세션이 없으면 새로 생성합니다.
-   * Dexie transaction으로 read-modify-write 원자성을 보장합니다.
-   *
-   * @param entryId - 일기 ID
-   * @param message - 추가할 메시지
-   * @returns 업데이트된 세션
-   */
+  async listMessages(
+    entryId: string,
+    pagination?: PaginationOptions
+  ): Promise<ChatMessageRecord[]> {
+    let query = this.db.messages
+      .where('[conversationId+seq]')
+      .between([entryId, Dexie.minKey], [entryId, Dexie.maxKey]);
+    if (pagination) {
+      query = query.offset(pagination.offset).limit(pagination.limit);
+    }
+    return query.toArray();
+  }
+
   async appendMessage(
     entryId: string,
-    message: ConversationMessage
-  ): Promise<ConversationSession> {
+    input: Omit<ChatMessageRecord, 'id' | 'seq' | 'conversationId'>
+  ): Promise<ChatMessageRecord> {
     return this.db.transaction(
       'rw',
-      this.db.conversations,
+      [this.db.conversations, this.db.messages],
       async () => {
         const existing = await this.db.conversations.get(entryId);
+        const seq = existing?.messageCount ?? 0;
 
+        const message: ChatMessageRecord = {
+          id: crypto.randomUUID(),
+          conversationId: entryId,
+          seq,
+          role: input.role,
+          content: input.content,
+          timestamp: input.timestamp,
+        };
+
+        await this.db.messages.add(message);
+
+        const preview = input.content.slice(0, 120);
         if (existing) {
-          existing.messages.push(message);
-          existing.updatedAt = message.timestamp;
-          await this.db.conversations.put(existing);
-          return existing;
+          await this.db.conversations.put({
+            ...existing,
+            updatedAt: input.timestamp,
+            messageCount: seq + 1,
+            lastMessagePreview: preview,
+            lastMessageRole: input.role,
+          });
+        } else {
+          await this.db.conversations.add({
+            entryId,
+            startedAt: input.timestamp,
+            updatedAt: input.timestamp,
+            messageCount: 1,
+            lastMessagePreview: preview,
+            lastMessageRole: input.role,
+          });
         }
 
-        const newSession: ConversationSession = {
-          entryId,
-          messages: [message],
-          startedAt: message.timestamp,
-          updatedAt: message.timestamp,
-        };
-        await this.db.conversations.add(newSession);
-        return newSession;
+        return message;
       }
     );
   }
 
-  /**
-   * 대화 세션을 삭제합니다.
-   *
-   * @param entryId - 삭제할 세션의 일기 ID
-   */
-  async delete(entryId: string): Promise<void> {
-    await this.db.conversations.delete(entryId);
+  async deleteSession(entryId: string): Promise<void> {
+    await this.db.transaction(
+      'rw',
+      [this.db.conversations, this.db.messages],
+      async () => {
+        await this.db.messages.where('conversationId').equals(entryId).delete();
+        await this.db.conversations.delete(entryId);
+      }
+    );
   }
 }
