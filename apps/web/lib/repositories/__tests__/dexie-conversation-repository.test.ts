@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import Dexie from 'dexie';
 import { LangJournalDB } from '../../db';
 import { DexieConversationRepository } from '../dexie-conversation-repository';
 
@@ -7,7 +6,8 @@ function makeDb(name = `test-${crypto.randomUUID()}`) {
   // fake-indexeddb가 전역 indexedDB를 대체했으므로 별도 세팅 없이 가능.
   const db = new LangJournalDB();
   // 각 테스트가 독립 DB를 쓰도록 이름 override
-  (db as unknown as Dexie).name = name;
+  // Dexie.name은 타입상 readonly지만 런타임에는 쓰기 가능.
+  (db as unknown as { name: string }).name = name;
   return db;
 }
 
@@ -144,7 +144,7 @@ describe('DexieConversationRepository — sessions and deletion', () => {
 
     const sessions = await repo.listSessions();
     expect(sessions.map((s) => s.entryId)).toEqual(['entry-a', 'entry-b']);
-    expect(sessions[0].updatedAt).toBe(3000);
+    expect(sessions[0]?.updatedAt).toBe(3000);
   });
 
   it('deleteSession removes session and all its messages', async () => {
