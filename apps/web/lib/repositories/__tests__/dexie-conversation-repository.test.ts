@@ -114,3 +114,65 @@ describe('DexieConversationRepository — sequence and ordering', () => {
     expect(session?.lastMessagePreview.length).toBe(120);
   });
 });
+
+describe('DexieConversationRepository — sessions and deletion', () => {
+  let db: LangJournalDB;
+  let repo: DexieConversationRepository;
+
+  beforeEach(async () => {
+    db = makeDb();
+    await db.open();
+    repo = new DexieConversationRepository(db);
+  });
+
+  it('listSessions returns sessions in updatedAt desc', async () => {
+    await repo.appendMessage('entry-a', {
+      role: 'user',
+      content: 'a1',
+      timestamp: 1000,
+    });
+    await repo.appendMessage('entry-b', {
+      role: 'user',
+      content: 'b1',
+      timestamp: 2000,
+    });
+    await repo.appendMessage('entry-a', {
+      role: 'user',
+      content: 'a2',
+      timestamp: 3000,
+    });
+
+    const sessions = await repo.listSessions();
+    expect(sessions.map((s) => s.entryId)).toEqual(['entry-a', 'entry-b']);
+    expect(sessions[0].updatedAt).toBe(3000);
+  });
+
+  it('deleteSession removes session and all its messages', async () => {
+    await repo.appendMessage('entry-a', {
+      role: 'user',
+      content: 'a1',
+      timestamp: 1000,
+    });
+    await repo.appendMessage('entry-a', {
+      role: 'assistant',
+      content: 'a2',
+      timestamp: 2000,
+    });
+    await repo.appendMessage('entry-b', {
+      role: 'user',
+      content: 'b1',
+      timestamp: 3000,
+    });
+
+    await repo.deleteSession('entry-a');
+
+    expect(await repo.findSession('entry-a')).toBeUndefined();
+    expect(await repo.listMessages('entry-a')).toEqual([]);
+    expect(await repo.findSession('entry-b')).toBeDefined();
+    expect((await repo.listMessages('entry-b')).length).toBe(1);
+  });
+
+  it('deleteSession is a no-op for unknown entryId', async () => {
+    await expect(repo.deleteSession('ghost')).resolves.toBeUndefined();
+  });
+});
