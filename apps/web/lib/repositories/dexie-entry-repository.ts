@@ -149,12 +149,20 @@ export class DexieEntryRepository implements IEntryRepository {
   }
 
   /**
-   * 일기를 삭제합니다.
+   * 일기와 연관된 대화·메시지를 함께 삭제한다 (cascade).
    *
    * @param id - 삭제할 일기의 ID
    */
   async delete(id: string): Promise<void> {
-    await this.db.entries.delete(id);
+    await this.db.transaction(
+      'rw',
+      [this.db.entries, this.db.conversations, this.db.messages],
+      async () => {
+        await this.db.messages.where('conversationId').equals(id).delete();
+        await this.db.conversations.delete(id);
+        await this.db.entries.delete(id);
+      }
+    );
   }
 
   /**

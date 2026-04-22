@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { LangJournalDB } from '../../db';
 import { DexieConversationRepository } from '../dexie-conversation-repository';
+import { DexieEntryRepository } from '../dexie-entry-repository';
+import type { DiaryEntry } from '@langjournal/core';
 
 function makeDb(name = `test-${crypto.randomUUID()}`) {
   // fake-indexeddb가 전역 indexedDB를 대체했으므로 별도 세팅 없이 가능.
@@ -174,5 +176,46 @@ describe('DexieConversationRepository — sessions and deletion', () => {
 
   it('deleteSession is a no-op for unknown entryId', async () => {
     await expect(repo.deleteSession('ghost')).resolves.toBeUndefined();
+  });
+});
+
+describe('DexieEntryRepository.delete — cascade to conversations', () => {
+  let db: LangJournalDB;
+  let convRepo: DexieConversationRepository;
+  let entryRepo: DexieEntryRepository;
+
+  beforeEach(async () => {
+    db = makeDb();
+    await db.open();
+    convRepo = new DexieConversationRepository(db);
+    entryRepo = new DexieEntryRepository(db);
+  });
+
+  it('deletes conversation session and messages when entry is deleted', async () => {
+    const entry: DiaryEntry = {
+      id: 'entry-a',
+      date: '2026-04-22',
+      title: 't',
+      targetText: 'hi',
+      createdAt: 1,
+      updatedAt: 1,
+    };
+    await entryRepo.create(entry);
+    await convRepo.appendMessage('entry-a', {
+      role: 'user',
+      content: 'u1',
+      timestamp: 1000,
+    });
+    await convRepo.appendMessage('entry-a', {
+      role: 'assistant',
+      content: 'a1',
+      timestamp: 2000,
+    });
+
+    await entryRepo.delete('entry-a');
+
+    expect(await entryRepo.findById('entry-a')).toBeUndefined();
+    expect(await convRepo.findSession('entry-a')).toBeUndefined();
+    expect(await convRepo.listMessages('entry-a')).toEqual([]);
   });
 });
