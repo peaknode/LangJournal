@@ -44,3 +44,73 @@ describe('DexieConversationRepository.appendMessage', () => {
     });
   });
 });
+
+describe('DexieConversationRepository — sequence and ordering', () => {
+  let db: LangJournalDB;
+  let repo: DexieConversationRepository;
+
+  beforeEach(async () => {
+    db = makeDb();
+    await db.open();
+    repo = new DexieConversationRepository(db);
+  });
+
+  it('assigns incrementing seq and updates session metadata on subsequent appends', async () => {
+    await repo.appendMessage('entry-1', {
+      role: 'user',
+      content: 'first',
+      timestamp: 1000,
+    });
+    const second = await repo.appendMessage('entry-1', {
+      role: 'assistant',
+      content: 'second response',
+      timestamp: 2000,
+    });
+
+    expect(second.seq).toBe(1);
+
+    const session = await repo.findSession('entry-1');
+    expect(session?.messageCount).toBe(2);
+    expect(session?.updatedAt).toBe(2000);
+    expect(session?.startedAt).toBe(1000);
+    expect(session?.lastMessagePreview).toBe('second response');
+    expect(session?.lastMessageRole).toBe('assistant');
+  });
+
+  it('listMessages returns messages in seq order', async () => {
+    await repo.appendMessage('entry-1', {
+      role: 'user',
+      content: 'a',
+      timestamp: 1000,
+    });
+    await repo.appendMessage('entry-1', {
+      role: 'assistant',
+      content: 'b',
+      timestamp: 1001,
+    });
+    await repo.appendMessage('entry-1', {
+      role: 'user',
+      content: 'c',
+      timestamp: 1002,
+    });
+
+    const messages = await repo.listMessages('entry-1');
+    expect(messages.map((m) => m.content)).toEqual(['a', 'b', 'c']);
+    expect(messages.map((m) => m.seq)).toEqual([0, 1, 2]);
+  });
+
+  it('listMessages returns [] for unknown entryId', async () => {
+    expect(await repo.listMessages('nope')).toEqual([]);
+  });
+
+  it('truncates preview to 120 chars', async () => {
+    const long = 'x'.repeat(200);
+    await repo.appendMessage('entry-1', {
+      role: 'user',
+      content: long,
+      timestamp: 1000,
+    });
+    const session = await repo.findSession('entry-1');
+    expect(session?.lastMessagePreview.length).toBe(120);
+  });
+});
