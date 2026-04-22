@@ -8,7 +8,7 @@
 import type {
   DiaryEntry,
   VocabItem,
-  ConversationMessage,
+  ChatMessageRecord,
   ConversationSession,
   FeedbackRecord,
   Language,
@@ -165,43 +165,64 @@ export interface IVocabRepository {
 }
 
 /**
- * 대화 저장소 인터페이스
- * 대화 세션의 관리 작업을 정의합니다.
+ * 채팅 대화 저장소.
+ *
+ * 세션 메타(`ConversationSession`)와 개별 메시지(`ChatMessageRecord`)를 함께 관리한다.
+ * `appendMessage`는 메시지 삽입과 세션 메타 갱신을 단일 트랜잭션으로 묶어
+ * 부분 쓰기에 의한 불일치를 방지한다.
  */
 export interface IConversationRepository {
   /**
-   * 대화 세션을 저장합니다.
-   * 기존 세션을 덮어씁니다.
+   * 대화 목록을 최근 업데이트 순으로 반환한다.
    *
-   * @param session - 저장할 대화 세션
+   * 목록 페이지(`/chat`)에서 사용. 메시지 본문은 `lastMessagePreview`만 포함한다.
+   *
+   * @param pagination - 페이지네이션 옵션 (선택)
    */
-  save(session: ConversationSession): Promise<void>;
+  listSessions(pagination?: PaginationOptions): Promise<ConversationSession[]>;
 
   /**
-   * 특정 일기의 대화 세션을 조회합니다.
+   * 특정 일기의 대화 세션 메타를 조회한다.
    *
    * @param entryId - 일기 ID
-   * @returns 대화 세션 또는 없으면 undefined
+   * @returns 세션 또는 없으면 undefined
    */
-  findByEntry(entryId: string): Promise<ConversationSession | undefined>;
+  findSession(entryId: string): Promise<ConversationSession | undefined>;
 
   /**
-   * 대화 세션에 새 메시지를 추가합니다.
-   * 세션이 없으면 새로 생성합니다.
+   * 특정 대화의 메시지 목록을 seq 오름차순으로 반환한다.
    *
    * @param entryId - 일기 ID
-   * @param message - 추가할 메시지
-   * @returns 업데이트된 세션
+   * @param pagination - 페이지네이션 옵션 (선택)
+   */
+  listMessages(
+    entryId: string,
+    pagination?: PaginationOptions
+  ): Promise<ChatMessageRecord[]>;
+
+  /**
+   * 메시지를 대화에 추가한다.
+   *
+   * 단일 트랜잭션으로 실행된다:
+   *   1. 세션이 없으면 startedAt=now, messageCount=0으로 생성
+   *   2. seq = session.messageCount 배정
+   *   3. messages 테이블에 insert
+   *   4. 세션 메타 갱신 (updatedAt, messageCount++, lastMessagePreview, lastMessageRole)
+   *
+   * @param entryId - 대화가 속한 일기 ID
+   * @param input - id·seq·conversationId는 저장소에서 부여한다
+   * @returns 저장된 메시지 (id, seq 포함)
    */
   appendMessage(
     entryId: string,
-    message: ConversationMessage
-  ): Promise<ConversationSession>;
+    input: Omit<ChatMessageRecord, 'id' | 'seq' | 'conversationId'>
+  ): Promise<ChatMessageRecord>;
 
   /**
-   * 대화 세션을 삭제합니다.
+   * 대화 전체(세션 + 모든 메시지)를 삭제한다.
+   * 일기 삭제 시 cascade 용도로 호출.
    *
-   * @param entryId - 삭제할 세션의 일기 ID
+   * @param entryId - 삭제할 일기 ID
    */
-  delete(entryId: string): Promise<void>;
+  deleteSession(entryId: string): Promise<void>;
 }
