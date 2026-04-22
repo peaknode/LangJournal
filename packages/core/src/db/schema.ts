@@ -130,16 +130,44 @@ export interface ConversationMessage {
 }
 
 /**
- * 대화 세션
- * 특정 일기를 기반으로 한 대화 연습 세션을 나타냅니다.
+ * 대화 세션 메타데이터.
+ *
+ * 채팅 목록 페이지에서 읽어 표시하는 경량 엔티티.
+ * 메시지 본문은 `ChatMessageRecord` 테이블에 별도로 저장된다.
+ * 대화 1개당 1 row를 가지며 PK는 연결된 일기의 `entryId`이다.
  */
 export interface ConversationSession {
-    /** 대화의 기반이 되는 일기의 ID (고유 키) */
-    entryId: string;
-    /** 대화 메시지 목록 */
-    messages: ConversationMessage[];
-    /** 대화 시작 시간 */
-    startedAt: number;
-    /** 마지막 메시지 시간 */
-    updatedAt: number;
+  /** PK — 연결된 일기 ID (1:1) */
+  entryId: string;
+  /** 대화 시작 시간 (최초 메시지 추가 시) */
+  startedAt: number;
+  /** 마지막 메시지 추가 시간 — 목록 정렬·미리보기용 */
+  updatedAt: number;
+  /** 메시지 개수 — seq 배정과 UI 뱃지 용도 */
+  messageCount: number;
+  /** 마지막 메시지 본문 앞 최대 120자 — 목록 미리보기 */
+  lastMessagePreview: string;
+  /** 마지막 메시지 역할 — 목록에서 'You:' / 'AI:' 구분 */
+  lastMessageRole: 'user' | 'assistant';
+}
+
+/**
+ * 채팅 메시지 (개별 row) — 정규화된 저장용 타입.
+ *
+ * `ConversationMessage`(LLM 프롬프트 입력)와 구분되는 저장 전용 표현이며,
+ * 저장소에서 `id`와 `seq`는 쓰기 시점에 부여된다.
+ */
+export interface ChatMessageRecord {
+  /** PK — crypto.randomUUID() */
+  id: string;
+  /** 속한 대화의 ID (= 일기의 entryId, 인덱스됨) */
+  conversationId: string;
+  /** 대화 내 정렬 순서 — timestamp 동점 시 안정 정렬 보장 */
+  seq: number;
+  /** 발화자 역할 */
+  role: 'user' | 'assistant';
+  /** 본문 */
+  content: string;
+  /** 생성 시간 (Unix ms) */
+  timestamp: number;
 }
