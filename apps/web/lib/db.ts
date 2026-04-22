@@ -11,6 +11,7 @@ import Dexie, { type Table } from 'dexie';
 import type {
   DiaryEntry,
   ConversationSession,
+  ChatMessageRecord,
   VocabItem,
 } from '@langjournal/core';
 
@@ -31,8 +32,11 @@ export class LangJournalDB extends Dexie {
   /** 일기 테이블 (PK: id) */
   entries!: Table<DiaryEntry, string>;
 
-  /** 대화 세션 테이블 (PK: entryId) */
+  /** 대화 세션 메타 테이블 (PK: entryId) */
   conversations!: Table<ConversationSession, string>;
+
+  /** 채팅 메시지 테이블 (PK: id) */
+  messages!: Table<ChatMessageRecord, string>;
 
   /** 어휘 항목 테이블 (PK: id) */
   vocabItems!: Table<VocabItem, string>;
@@ -53,6 +57,48 @@ export class LangJournalDB extends Dexie {
       // 현재는 단일 인덱스로 충분
       vocabItems: 'id, entryId, language, masteryLevel, createdAt',
     });
+
+    // v2: 대화 세션을 메타 테이블 + 메시지 테이블로 분리
+    // - conversations: 세션 메타데이터만 저장 (messages 배열 제거)
+    // - messages: 개별 메시지 레코드 저장, [conversationId+seq] 복합 인덱스로 순서 보장
+    // upgrade 함수는 기존 v1 데이터(conversations.messages[])를 v2 구조로 변환
+    this.version(2)
+      .stores({
+        entries: 'id, date, targetLanguage, createdAt',
+        conversations: 'entryId, updatedAt',
+        messages: 'id, conversationId, seq, [conversationId+seq]',
+        vocabItems: 'id, entryId, language, masteryLevel, createdAt',
+      })
+      .upgrade(async (tx) => {
+        const convTable = tx.table('conversations');
+        const msgTable = tx.table('messages');
+        const oldRows = await convTable.toArray();
+
+        for (const row of oldRows) {
+          const oldMessages = row.messages ?? [];
+
+          for (let i = 0; i < oldMessages.length; i++) {
+            await msgTable.add({
+              id: crypto.randomUUID(),
+              conversationId: row.entryId,
+              seq: i,
+              role: oldMessages[i].role,
+              content: oldMessages[i].content,
+              timestamp: oldMessages[i].timestamp,
+            });
+          }
+
+          const last = oldMessages[oldMessages.length - 1];
+          await convTable.put({
+            entryId: row.entryId,
+            startedAt: row.startedAt ?? last?.timestamp ?? Date.now(),
+            updatedAt: row.updatedAt ?? last?.timestamp ?? Date.now(),
+            messageCount: oldMessages.length,
+            lastMessagePreview: last?.content.slice(0, 120) ?? '',
+            lastMessageRole: last?.role ?? 'user',
+          });
+        }
+      });
   }
 }
 
