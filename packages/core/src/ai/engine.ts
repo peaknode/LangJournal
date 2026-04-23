@@ -14,7 +14,9 @@
 
 import { CreateWebWorkerMLCEngine } from '@mlc-ai/web-llm';
 import type { WebWorkerMLCEngine, InitProgressReport } from '@mlc-ai/web-llm';
-import type { ChatMessage, LLMLoadProgress, LLMFeedbackResponse } from '../llm/types.js';
+import type { ChatMessage, LLMLoadProgress } from '../llm/types.js';
+import type { FeedbackRecord } from '../db/schema.js';
+import type { SentenceSpan } from '../llm/sentence-splitter.js';
 import { LLMError, parseFeedbackResponse } from '../llm/types.js';
 
 /**
@@ -137,19 +139,22 @@ export class AiCoreEngine {
   /**
    * 피드백 생성 (JSON 파싱 포함)
    *
-   * generate()를 호출한 후 응답을 LLMFeedbackResponse로 파싱합니다.
+   * generate()를 호출한 후 응답을 FeedbackRecord로 파싱합니다.
+   * sentenceSpans를 전달하면 correction의 offset/length를 클라이언트에서 계산합니다.
    *
    * @param messages - 피드백 요청 메시지 배열
+   * @param sentenceSpans - 프롬프트 생성 시 분리한 문장 위치 정보
    * @param onChunk - 청크 수신 콜백 (선택사항)
    * @returns 파싱된 피드백 응답
    * @throws LLMError (JSON_PARSE_FAILED 포함 모든 LLM 에러)
    */
   async generateFeedback(
     messages: ChatMessage[],
+    sentenceSpans: SentenceSpan[] = [],
     onChunk?: (chunk: string) => void,
-  ): Promise<LLMFeedbackResponse> {
+  ): Promise<FeedbackRecord> {
     const raw = await this.generate(messages, onChunk);
-    return parseFeedbackResponse(raw);
+    return parseFeedbackResponse(raw, sentenceSpans);
   }
 
   /**

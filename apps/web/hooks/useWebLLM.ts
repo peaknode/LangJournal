@@ -20,7 +20,7 @@
 
 import { useCallback } from 'react';
 import { AiCoreEngine, LLMError } from '@langjournal/core';
-import type { ChatMessage, LLMFeedbackResponse, LLMErrorCode } from '@langjournal/core';
+import type { ChatMessage, LLMErrorCode, FeedbackRecord, SentenceSpan } from '@langjournal/core';
 import { useLLMStore } from '../lib/store';
 
 /** 사용할 LLM 모델 ID */
@@ -139,15 +139,17 @@ export function useWebLLM() {
    * 피드백 생성 (JSON 파싱 포함)
    *
    * @param messages - 피드백 요청 메시지 배열
+   * @param sentenceSpans - 프롬프트 생성 시 분리한 문장 위치 정보
    * @param onChunk - 청크 수신 콜백 (선택사항)
-   * @returns 파싱된 피드백 응답
+   * @returns 파싱된 FeedbackRecord (문장별 그룹 + flat 배열)
    * @throws LLMError (JSON_PARSE_FAILED 포함 모든 LLM 에러)
    */
   const generateFeedback = useCallback(
     async (
       messages: ChatMessage[],
+      sentenceSpans: SentenceSpan[] = [],
       onChunk?: (chunk: string) => void,
-    ): Promise<LLMFeedbackResponse> => {
+    ): Promise<FeedbackRecord> => {
       if (!engine) {
         throw new LLMError(
           'ENGINE_NOT_INITIALIZED',
@@ -155,9 +157,12 @@ export function useWebLLM() {
         );
       }
 
+
+      console.log('start :::::::::: ')
+
       try {
         setStatus('generating');
-        const result = await engine.generateFeedback(messages, onChunk);
+        const result = await engine.generateFeedback(messages, sentenceSpans, onChunk);
         setStatus('ready');
         return result;
       } catch (err) {

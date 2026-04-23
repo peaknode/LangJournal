@@ -4,7 +4,8 @@
  * @module llm/types
  */
 
-import type { Language } from '../db/schema.js';
+import type { Language, Correction, Suggestion, SentenceFeedback, FeedbackRecord } from '../db/schema.js';
+import type { SentenceSpan } from './sentence-splitter.js';
 
 /**
  * 표준 AI 채팅 메시지
@@ -33,24 +34,26 @@ export interface LLMFeedbackRequest {
 }
 
 /**
- * LLM 피드백 응답
- * AI가 생성한 피드백의 구조화된 형식입니다.
+ * LLM 피드백 응답 (raw JSON)
+ * 모델이 반환하는 문장별 그룹 JSON 구조입니다.
  * prompts.ts의 buildFeedbackPrompt와 스키마가 일치해야 합니다.
  */
 export interface LLMFeedbackResponse {
-  /** 문법/맞춤법 교정 목록 */
-  corrections: Array<{
-    original: string;
+  /** 문장별 피드백 (index는 프롬프트에 전달된 문장 번호, 1-based) */
+  sentences: Array<{
+    index: number;
     corrected: string;
-    explanation: string;
-    offset: number;
-    length: number;
-  }>;
-  /** 표현 업그레이드 제안 */
-  suggestions: Array<{
-    original: string;
-    better: string;
-    reason: string;
+    corrections: Array<{
+      type: string;
+      original: string;
+      corrected: string;
+      explanation: string;
+    }>;
+    suggestions: Array<{
+      original: string;
+      better: string;
+      reason: string;
+    }>;
   }>;
   /** 오늘 배운 새로운 표현 (정확히 3개) */
   newPhrases: string[];
@@ -128,30 +131,82 @@ export class LLMError extends Error {
 }
 
 /**
- * LLM 텍스트 출력을 피드백 응답으로 파싱합니다.
- * Gemma 등의 소형 모델이 응답에 ```json 펜스를 붙이는 경우를 처리합니다.
+ * LLM 텍스트 출력을 FeedbackRecord로 파싱합니다.
+ * 문장별 그룹 JSON을 파싱하고, correction의 offset/length를 클라이언트에서 계산합니다.
  *
  * @param raw - LLM이 생성한 원본 텍스트
- * @returns 파싱된 피드백 응답
+ * @param sentenceSpans - 프롬프트 생성 시 분리한 문장 위치 정보
+ * @returns 파싱된 FeedbackRecord (sentences + flat 배열 포함)
  * @throws JSON_PARSE_FAILED 에러 (파싱 실패 시)
  *
  * @example
- * const response = await useLLM().generate([...]);
- * const feedback = parseFeedbackResponse(response);
+ * const { prompt, sentenceSpans } = buildFeedbackPrompt(entry);
+ * const raw = await engine.generate([{ role: 'user', content: prompt }]);
+ * const feedback = parseFeedbackResponse(raw, sentenceSpans);
  */
-export function parseFeedbackResponse(raw: string): LLMFeedbackResponse {
+export function parseFeedbackResponse(
+  raw: string,
+  sentenceSpans: SentenceSpan[] = [],
+): FeedbackRecord {
+  let parsed: LLMFeedbackResponse;
+
   try {
     // Gemma가 간혹 ```json ... ``` 펜스를 붙이는 경우 제거
     const cleaned = raw
       .replace(/^```json\s*/i, '')
       .replace(/```\s*$/, '')
       .trim();
-    return JSON.parse(cleaned) as LLMFeedbackResponse;
+    parsed = JSON.parse(cleaned) as LLMFeedbackResponse;
   } catch (cause) {
     throw new LLMError(
       'JSON_PARSE_FAILED',
       `Failed to parse LLM response: ${raw.slice(0, 100)}`,
-      cause
+      cause,
     );
   }
+
+  const sentences: SentenceFeedback[] = [];
+  const allCorrections: Correction[] = [];
+  const allSuggestions: Suggestion[] = [];
+
+  for (const sent of parsed.sentences ?? []) {
+    const span = sentenceSpans[sent.index - 1];
+    const sentenceText = span?.text ?? '';
+    const sentenceOffset = span?.offset ?? 0;
+
+    const corrections: Correction[] = (sent.corrections ?? []).map((c) => {
+      const localIdx = sentenceText.indexOf(c.original);
+      return {
+        original: c.original,
+        corrected: c.corrected,
+        explanation: c.explanation,
+        offset: localIdx >= 0 ? sentenceOffset + localIdx : -1,
+        length: c.original.length,
+      };
+    });
+
+    const suggestions: Suggestion[] = (sent.suggestions ?? []).map((s) => ({
+      original: s.original,
+      better: s.better,
+      reason: s.reason,
+    }));
+
+    sentences.push({
+      original: sentenceText,
+      corrected: sent.corrected,
+      corrections,
+      suggestions,
+    });
+
+    allCorrections.push(...corrections);
+    allSuggestions.push(...suggestions);
+  }
+
+  return {
+    sentences,
+    corrections: allCorrections,
+    suggestions: allSuggestions,
+    newPhrases: parsed.newPhrases ?? [],
+    generatedAt: Date.now(),
+  };
 }

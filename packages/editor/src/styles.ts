@@ -29,4 +29,9 @@ export const feedbackStyles = `
     text-underline-offset: 3px;
     cursor: pointer;
   }
+  .lj-active {
+    background-color: rgba(207, 252, 0, 0.2);
+    border-radius: 2px;
+    transition: background-color 150ms ease;
+  }
 `;

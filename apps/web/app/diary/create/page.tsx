@@ -9,6 +9,7 @@ import {
   useTitleEditorContext,
 } from "@/components/diary/edit/diary-form-provider";
 import type { DiaryFormValues } from "@/components/diary/edit/diary-form-provider";
+import { AnnotationPanel } from "@/components/diary/edit/annotation-panel";
 import { TitleEditor } from "@/components/editor/title-editor";
 import { useJournal } from "@/hooks/useJournal";
 import { formatDateToString } from "@/lib/date-utils";
@@ -20,7 +21,13 @@ import { useFormContext } from "react-hook-form";
  * 에디터 인스턴스와 폼 상태에 접근하여 저장 핸들러를 구성합니다.
  */
 function DiaryCreateContent() {
-  const { editor } = useSharedEditor();
+  const {
+    editor,
+    feedbackRecord,
+    activeFeedbackId,
+    setActiveFeedbackId,
+    scrollToFeedback,
+  } = useSharedEditor();
   const { titleEditor } = useTitleEditorContext();
   const { getValues } = useFormContext<DiaryFormValues>();
   const router = useRouter();
@@ -37,8 +44,8 @@ function DiaryCreateContent() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col py-12">
-      <div className="w-[800px] mx-auto h-full flex flex-col">
+    <div className="w-full h-full flex flex-row py-12">
+      <div className="flex-1 max-w-200 mx-auto h-full flex flex-col">
         <DiaryHeader />
         <div className="flex-1 w-full h-full tiptap py-4">
           <TitleEditor />
@@ -46,6 +53,14 @@ function DiaryCreateContent() {
         </div>
         <DiaryFooter onSave={handleSave} />
       </div>
+      <AnnotationPanel
+        feedbackRecord={feedbackRecord}
+        activeFeedbackId={activeFeedbackId}
+        onFeedbackSelect={(id) => {
+          setActiveFeedbackId(id);
+          if (id) scrollToFeedback(id);
+        }}
+      />
     </div>
   );
 }

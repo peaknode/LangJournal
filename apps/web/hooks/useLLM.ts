@@ -13,9 +13,9 @@
 import { useCallback } from 'react';
 import { MLCEngine, hasModelInCache, prebuiltAppConfig } from '@mlc-ai/web-llm';
 import type { AppConfig } from '@mlc-ai/web-llm';
-import type { ChatMessage } from '@langjournal/core';
+import type { ChatMessage, FeedbackRecord } from '@langjournal/core';
 import { LLMError, parseFeedbackResponse } from '@langjournal/core';
-import type { LLMFeedbackResponse, LLMErrorCode } from '@langjournal/core';
+import type { LLMErrorCode } from '@langjournal/core';
 import { useLLMStore } from '../lib/store';
 
 /** 사용할 LLM 모델 ID */
@@ -229,7 +229,7 @@ export function useLLM() {
     async (
       messages: ChatMessage[],
       onChunk?: (chunk: string) => void
-    ): Promise<LLMFeedbackResponse> => {
+    ): Promise<FeedbackRecord> => {
       const raw = await generate(messages, onChunk);
       return parseFeedbackResponse(raw); // @langjournal/core
     },

@@ -42,13 +42,30 @@ export interface Suggestion {
 }
 
 /**
+ * 문장 단위 피드백 그룹
+ * 하나의 문장에 대한 교정과 제안을 묶어서 표현합니다.
+ */
+export interface SentenceFeedback {
+    /** 원문 문장 */
+    original: string;
+    /** 교정된 문장 */
+    corrected: string;
+    /** 해당 문장의 문법 교정 목록 */
+    corrections: Correction[];
+    /** 해당 문장의 표현 제안 목록 */
+    suggestions: Suggestion[];
+}
+
+/**
  * AI 피드백 기록
  * 일기에 대한 LLM 분석 결과를 저장합니다.
  */
 export interface FeedbackRecord {
-    /** 문법 교정 목록 */
+    /** 문장별 피드백 그룹 (v2, 없으면 레거시 v1) */
+    sentences?: SentenceFeedback[];
+    /** 문법 교정 목록 (하위 호환용 — sentences에서 flatten) */
     corrections: Correction[];
-    /** 표현 업그레이드 제안 목록 */
+    /** 표현 업그레이드 제안 목록 (하위 호환용 — sentences에서 flatten) */
     suggestions: Suggestion[];
     /** 오늘 배운 새로운 표현 3개 */
     newPhrases: string[];

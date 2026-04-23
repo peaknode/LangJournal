@@ -7,6 +7,22 @@ import { buildFeedbackPrompt } from '@langjournal/core';
 import { useWebLLM } from './useWebLLM';
 
 /**
+ * FNV-1a 해시를 계산합니다.
+ * 텍스트 변경 감지용으로, 암호학적 보안은 불필요합니다.
+ *
+ * @param str - 해시할 문자열
+ * @returns 32비트 해시 문자열 (16진수)
+ */
+function fnv1aHash(str: string): string {
+    let hash = 0x811c9dc5; // FNV offset basis
+    for (let i = 0; i < str.length; i++) {
+        hash ^= str.charCodeAt(i);
+        hash = (hash * 0x01000193) >>> 0; // FNV prime, unsigned 32-bit
+    }
+    return hash.toString(16);
+}
+
+/**
  * 에디터 내용 변경을 감지해서 자동으로 AI 피드백을 생성합니다.
  * 타이핑 멈춤 2초 후 LLM을 호출하고, setFeedback으로 하이라이트를 적용합니다.
  *
@@ -19,6 +35,7 @@ import { useWebLLM } from './useWebLLM';
  * - debounce 2초: 타이핑 멈춤 2초 후에만 분석 시작
  * - status !== 'ready' 시 skip: 모델이 로드되지 않았거나 이미 분석 중이면 무시
  * - text.length < 10 시 skip: 너무 짧은 텍스트는 분석하지 않음
+ * - 동일 텍스트 재분석 방지: FNV-1a 해시로 이전 분석 텍스트와 비교
  * - 에러는 조용히 처리: 분석 실패가 사용자 경험을 방해하지 않도록
  *
  * @example
@@ -32,13 +49,19 @@ export function useRealtimeFeedback(
     const { generateFeedback, status } = useWebLLM();
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const pendingRef = useRef(false);
+    const lastAnalyzedHashRef = useRef<string>('');
 
     const triggerAnalysis = useCallback(async () => {
         if (!editor || status !== 'ready' || pendingRef.current) return;
 
-
         const text = editor.getText().trim();
         if (text.length < 10) return;
+
+        const hash = fnv1aHash(text);
+        if (hash === lastAnalyzedHashRef.current) {
+            console.debug('[useRealtimeFeedback] skipping — text unchanged');
+            return;
+        }
 
         pendingRef.current = true;
 
@@ -54,14 +77,17 @@ export function useRealtimeFeedback(
                 updatedAt: Date.now(),
             };
 
+            const { prompt, sentenceSpans } = buildFeedbackPrompt(entry);
+
             const messages: ChatMessage[] = [
-                { role: 'user', content: buildFeedbackPrompt(entry) },
+                { role: 'user', content: prompt },
             ];
 
-            const feedback = await generateFeedback(messages);
+            const feedback = await generateFeedback(messages, sentenceSpans);
             console.debug('[useRealtimeFeedback] analysis result:', feedback);
             if (feedback) {
-                setFeedback({ ...feedback, generatedAt: Date.now() });
+                lastAnalyzedHashRef.current = hash;
+                setFeedback(feedback);
             }
         } catch (err) {
             // 에러 조용히 처리 — 사용자 타이핑 방해 X

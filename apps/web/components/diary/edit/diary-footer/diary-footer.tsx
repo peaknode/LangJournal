@@ -37,9 +37,6 @@ export const DiaryFooter = ({ onSave }: DiaryFooterProps) => {
         }
     };
 
-
-    console.log(status, '??????????')
-
     return (
         <div className="w-full flex flex-col items-end gap-4 mt-6">
             {/* 저장 */}

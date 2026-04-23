@@ -10,9 +10,10 @@ import type {
   ConversationMessage,
   Language,
 } from '../db/schema.js';
+import { splitSentences, type SentenceSpan } from './sentence-splitter.js';
 
 /**
- * 언어 코드를 전체 언어명으로 매핑합니다.
+ * ���어 코드를 전체 언어명으로 매핑합니다.
  * 프롬프트에서 사람이 읽을 수 있는 언어명을 사용하기 위함입니다.
  */
 const LANGUAGE_NAMES: Record<Language, string> = {
@@ -24,47 +25,61 @@ const LANGUAGE_NAMES: Record<Language, string> = {
 };
 
 /**
+ * buildFeedbackPrompt의 반환 타입
+ * 프롬프트 문자열과 문장 분리 결과를 함께 반환합니다.
+ */
+export interface FeedbackPromptResult {
+  /** LLM에 보낼 프롬프트 문자열 */
+  prompt: string;
+  /** 클라이언트에서 분리한 문��� 위치 정보 (파서에서 offset 계산용) */
+  sentenceSpans: SentenceSpan[];
+}
+
+/**
  * 일기에 대한 AI 피드백을 생성하기 위한 프롬프트를 빌드합니다.
  *
  * 프롬프트 특징:
- * - JSON 응답 형식을 명시적으로 강제
- * - offset과 length를 포함한 정확한 스키마 정의
+ * - 클라이언트���서 문장을 미리 분���하여 번호 목록으로 제공
+ * - 모델은 각 문장의 교정/제안만 채우면 됨 (소�� 모델 부담 감소)
+ * - offset/length는 모델에게 요구하지 않고 클라이언트에서 계��
+ * - 1-shot 예제 포함으로 출력 안정성 확보
  * - 한국어 설명을 명시적으로 요청
- * - Gemma 같은 소형 모델을 고려하여 간명하게 작성
  *
  * @param entry - 분석할 일기 항목
- * @returns LLM에 보낼 프롬프트 문자열
+ * @returns 프롬프트 ���자열과 문장 위치 정보
  *
  * @example
- * const prompt = buildFeedbackPrompt(entry);
- * const response = await llm.generate([{ role: 'user', content: prompt }]);
- * const feedback = parseFeedbackResponse(response);
+ * const { prompt, sentenceSpans } = buildFeedbackPrompt(entry);
+ * const raw = await llm.generate([{ role: 'user', content: prompt }]);
+ * const feedback = parseFeedbackResponse(raw, sentenceSpans);
  */
-export function buildFeedbackPrompt(entry: DiaryEntry): string {
-  const lang = LANGUAGE_NAMES[entry.targetLanguage];
-  return `You are an expert ${lang} language tutor for Korean learners.
-Analyze the following diary entry and respond ONLY with valid JSON. No markdown fences, no text outside JSON.
+export function buildFeedbackPrompt(entry: DiaryEntry): FeedbackPromptResult {
+  const lang = LANGUAGE_NAMES[entry.targetLanguage ?? 'en'];
+  const sentenceSpans = splitSentences(entry.targetText);
 
-Diary entry: "${entry.targetText}"
+  const numberedSentences = sentenceSpans
+    .map((s, i) => `${i + 1}. "${s.text}"`)
+    .join('\n');
 
-Required JSON format:
-{
-  "corrections": [
-    { "original": "...", "corrected": "...", "explanation": "한국어 설명", "offset": 0, "length": 0 }
-  ],
-  "suggestions": [
-    { "original": "...", "better": "...", "reason": "한국어 이유" }
-  ],
-  "newPhrases": ["표현1", "표현2", "표현3"]
-}
+  const prompt = `You are an ${lang} tutor for Korean learners.
+Below are numbered sentences from a diary. For each sentence, find grammar/spelling errors and suggest better expressions.
+
+Sentences:
+${numberedSentences}
+
+Respond ONLY with valid JSON, no markdown fences, no extra text:
+{"sentences":[{"index":1,"corrected":"I went to school yesterday.","corrections":[{"type":"grammar","original":"go","corrected":"went","explanation":"과거 시제를 사용해야 합니���"}],"suggestions":[{"original":"go to school","better":"attended school","reason":"더 격식 있는 표현"}]}],"newPhrases":["attend school","have a blast","look forward to"]}
 
 Rules:
-- corrections: only grammar/spelling errors, include character offset and length in original text
-- suggestions: natural expression upgrades (max 3)
-- newPhrases: exactly 3 useful phrases from the entry context
-- All explanations must be in Korean
-- If you speak in Korean, stop the conversation and respond by saying, ‘You must speak in English.’
+- Only include sentences that have errors or can be improved
+- If a sentence is correct and natural, skip it
+- All explanation and reason must be in Korean
+- corrections: grammar/spelling errors only
+- suggestions: more natural expressions (max 2 per sentence)
+- newPhrases: exactly 3 useful expressions from the diary context
 `;
+
+  return { prompt, sentenceSpans };
 }
 
 /**
@@ -79,7 +94,7 @@ Rules:
  * messages 배열의 첫 번째 요소로 사용됩니다.
  */
 export function buildConversationSystemPrompt(entry: DiaryEntry): string {
-  const lang = LANGUAGE_NAMES[entry.targetLanguage];
+  const lang = LANGUAGE_NAMES[entry.targetLanguage ?? 'en'];
   return `You are a friendly ${lang} conversation partner.
 The user wrote this diary entry today: "${entry.targetText}"
 Rules:
@@ -88,13 +103,13 @@ Rules:
 - Ask one follow-up question per turn
 - Gently correct major grammar errors by using the correct form naturally in your response
 - Do not use markdown formatting
-- If you speak in Korean, stop the conversation and respond by saying, ‘You must speak in English.
+- If you speak in Korean, stop the conversation and respond by saying, 'You must speak in English.
 `;
 }
 
 /**
- * 대화 시작용 메시지를 생성합니다.
- * 이 메시지를 user 역할로 LLM에 보내면 AI가 대화를 시작합니다.
+ * 대��� 시작용 메시지를 생성합니다.
+ * 이 메시지를 user 역할로 LLM에 보내면 AI가 대화를 시작합니���.
  *
  * @param entry - 대화를 시작할 일기 항목
  * @returns 사용자 역할의 프롬프트 문자열
@@ -103,10 +118,10 @@ Rules:
  * 실제 사용 흐름:
  * 1. generateFeedback으로 피드백 완료
  * 2. buildConversationMessages(entry, [])로 초기 메시지 배열 생성
- * 3. 시스템 프롬프트 + 이 메시지로 AI의 첫 응답 생성
+ * 3. 시스템 프롬프�� + 이 메시지로 AI의 첫 응답 생성
  */
 export function buildConversationStartPrompt(entry: DiaryEntry): string {
-  const lang = LANGUAGE_NAMES[entry.targetLanguage];
+  const lang = LANGUAGE_NAMES[entry.targetLanguage ?? 'en'];
   return `Start a conversation with the user about their diary. Ask one natural question in ${lang} based on what they wrote.`;
 }
 
@@ -115,7 +130,7 @@ export function buildConversationStartPrompt(entry: DiaryEntry): string {
  * LLM API에 전달할 형식으로 메시지를 정렬합니다.
  *
  * @param entry - 대화의 기반이 되는 일기 항목
- * @param history - 기존 대화 메시지 목록 (ConversationMessage[])
+ * @param history - 기존 대��� 메시지 ��록 (ConversationMessage[])
  * @returns ChatMessage 배열 (system + user/assistant 메시지)
  *
  * @example

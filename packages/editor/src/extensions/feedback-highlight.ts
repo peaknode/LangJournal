@@ -1,7 +1,7 @@
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
-import type { Correction, Suggestion } from '@langjournal/core';
+import type { Correction, Suggestion, SentenceFeedback } from '@langjournal/core';
 import { mapCorrectionToRange, findAllSuggestionRanges } from '../utils/position-mapping.js';
 
 /**
@@ -10,6 +10,8 @@ import { mapCorrectionToRange, findAllSuggestionRanges } from '../utils/position
 interface FeedbackPluginState {
   corrections: Correction[];
   suggestions: Suggestion[];
+  sentences?: SentenceFeedback[];
+  activeId: string | null;
 }
 
 /**
@@ -47,10 +49,11 @@ export const FeedbackHighlight = Extension.create({
         key: FeedbackHighlightKey,
 
         state: {
-          init: (): FeedbackPluginState => ({ corrections: [], suggestions: [] }),
+          init: (): FeedbackPluginState => ({ corrections: [], suggestions: [], activeId: null }),
           apply(tr, prev): FeedbackPluginState {
-            const meta = tr.getMeta(FeedbackHighlightKey) as FeedbackPluginState | undefined;
-            return meta ?? prev;
+            const meta = tr.getMeta(FeedbackHighlightKey) as Partial<FeedbackPluginState> | undefined;
+            if (!meta) return prev;
+            return { ...prev, ...meta };
           },
         },
 
@@ -59,7 +62,7 @@ export const FeedbackHighlight = Extension.create({
             const pluginState = FeedbackHighlightKey.getState(state);
             if (!pluginState) return DecorationSet.empty;
 
-            const { corrections, suggestions } = pluginState;
+            const { corrections, suggestions, sentences, activeId } = pluginState;
             if (corrections.length === 0 && suggestions.length === 0) {
               return DecorationSet.empty;
             }
@@ -67,33 +70,85 @@ export const FeedbackHighlight = Extension.create({
             const decorations: Decoration[] = [];
             const { doc } = state;
 
-            for (const correction of corrections) {
-              const range = mapCorrectionToRange(doc, correction);
-              if (!range) continue;
+            // sentences가 있으면 문장별 ID 매핑, 없으면 레거시 flat 인덱스
+            if (sentences && sentences.length > 0) {
+              sentences.forEach((sent, sIdx) => {
+                sent.corrections.forEach((correction, cIdx) => {
+                  const range = mapCorrectionToRange(doc, correction);
+                  if (!range) return;
 
-              decorations.push(
-                Decoration.inline(range.from, range.to, {
-                  class: 'lj-correction',
-                  'data-type': 'correction',
-                  'data-original': correction.original,
-                  'data-corrected': correction.corrected,
-                  'data-explanation': correction.explanation,
-                }),
-              );
-            }
+                  const feedbackId = `correction-${sIdx}-${cIdx}`;
+                  const isActive = activeId === feedbackId;
+                  decorations.push(
+                    Decoration.inline(range.from, range.to, {
+                      class: `lj-correction${isActive ? ' lj-active' : ''}`,
+                      'data-type': 'correction',
+                      'data-feedback-id': feedbackId,
+                      'data-original': correction.original,
+                      'data-corrected': correction.corrected,
+                      'data-explanation': correction.explanation,
+                    }),
+                  );
+                });
 
-            for (const suggestion of suggestions) {
-              const ranges = findAllSuggestionRanges(doc, suggestion);
-              for (const range of ranges) {
+                sent.suggestions.forEach((suggestion, sgIdx) => {
+                  const feedbackId = `suggestion-${sIdx}-${sgIdx}`;
+                  const isActive = activeId === feedbackId;
+                  const ranges = findAllSuggestionRanges(doc, suggestion);
+                  for (const range of ranges) {
+                    decorations.push(
+                      Decoration.inline(range.from, range.to, {
+                        class: `lj-suggestion${isActive ? ' lj-active' : ''}`,
+                        'data-type': 'suggestion',
+                        'data-feedback-id': feedbackId,
+                        'data-original': suggestion.original,
+                        'data-better': suggestion.better,
+                        'data-reason': suggestion.reason,
+                      }),
+                    );
+                  }
+                });
+              });
+            } else {
+              // 레거시: flat 배열 순회
+              let correctionIndex = 0;
+              for (const correction of corrections) {
+                const range = mapCorrectionToRange(doc, correction);
+                if (!range) { correctionIndex++; continue; }
+
+                const feedbackId = `correction-${correctionIndex}`;
+                const isActive = activeId === feedbackId;
                 decorations.push(
                   Decoration.inline(range.from, range.to, {
-                    class: 'lj-suggestion',
-                    'data-type': 'suggestion',
-                    'data-original': suggestion.original,
-                    'data-better': suggestion.better,
-                    'data-reason': suggestion.reason,
+                    class: `lj-correction${isActive ? ' lj-active' : ''}`,
+                    'data-type': 'correction',
+                    'data-feedback-id': feedbackId,
+                    'data-original': correction.original,
+                    'data-corrected': correction.corrected,
+                    'data-explanation': correction.explanation,
                   }),
                 );
+                correctionIndex++;
+              }
+
+              let suggestionIndex = 0;
+              for (const suggestion of suggestions) {
+                const feedbackId = `suggestion-${suggestionIndex}`;
+                const isActive = activeId === feedbackId;
+                const ranges = findAllSuggestionRanges(doc, suggestion);
+                for (const range of ranges) {
+                  decorations.push(
+                    Decoration.inline(range.from, range.to, {
+                      class: `lj-suggestion${isActive ? ' lj-active' : ''}`,
+                      'data-type': 'suggestion',
+                      'data-feedback-id': feedbackId,
+                      'data-original': suggestion.original,
+                      'data-better': suggestion.better,
+                      'data-reason': suggestion.reason,
+                    }),
+                  );
+                }
+                suggestionIndex++;
               }
             }
 

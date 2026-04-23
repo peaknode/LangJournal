@@ -4,6 +4,7 @@ import { createContext, useContext } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useEditorWithFeedback, useTitleEditor } from "@langjournal/editor";
 import type { Editor } from "@tiptap/react";
+import type { FeedbackRecord } from "@langjournal/core";
 
 /**
  * 일기 작성/수정 폼의 값을 정의하는 타입입니다.
@@ -19,6 +20,10 @@ export interface DiaryFormValues {
 interface EditorContextType {
   editor: any;
   setFeedback: (feedback: any) => void;
+  feedbackRecord: FeedbackRecord | null;
+  activeFeedbackId: string | null;
+  setActiveFeedbackId: (id: string | null) => void;
+  scrollToFeedback: (id: string) => void;
   activeTooltip: any;
   onTooltipMouseEnter: () => void;
   onTooltipMouseLeave: () => void;

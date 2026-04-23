@@ -18,6 +18,7 @@ export type {
   DiaryEntry,
   Correction,
   Suggestion,
+  SentenceFeedback,
   FeedbackRecord,
   VocabItem,
   ConversationMessage,
@@ -57,12 +58,22 @@ export { LLMError, parseFeedbackResponse } from './llm/types.js';
 // LLM: 프롬프트 빌더
 // ============================================================================
 
+export type { FeedbackPromptResult } from './llm/prompts.js';
+
 export {
   buildFeedbackPrompt,
   buildConversationSystemPrompt,
   buildConversationStartPrompt,
   buildConversationMessages,
 } from './llm/prompts.js';
+
+// ============================================================================
+// LLM: 문장 분리 유틸리티
+// ============================================================================
+
+export type { SentenceSpan } from './llm/sentence-splitter.js';
+
+export { splitSentences } from './llm/sentence-splitter.js';
 
 // ============================================================================
 // Analysis: 통계 계산

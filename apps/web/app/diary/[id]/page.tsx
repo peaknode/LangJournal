@@ -10,6 +10,7 @@ import {
 import { ContentEditor } from "../../../components";
 import { TitleEditor } from "@/components/editor/title-editor";
 import { DiaryFooter } from "@/components/diary/edit/diary-footer/diary-footer";
+import { AnnotationPanel } from "@/components/diary/edit/annotation-panel";
 import { useFormContext } from "react-hook-form";
 import { useParams, useRouter } from "next/navigation";
 import { formatDateToString } from "@/lib/date-utils";
@@ -20,7 +21,13 @@ function DiaryDetailContent() {
   const params = useParams<{ id: string }>();
 
   const { entry, loading } = useEntry(params.id);
-  const { editor } = useSharedEditor();
+  const {
+    editor,
+    feedbackRecord,
+    activeFeedbackId,
+    setActiveFeedbackId,
+    scrollToFeedback,
+  } = useSharedEditor();
   const { titleEditor } = useTitleEditorContext();
   const { getValues } = useFormContext<DiaryFormValues>();
   const router = useRouter();
@@ -41,8 +48,8 @@ function DiaryDetailContent() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col py-12">
-      <div className="w-[800px] mx-auto h-full flex flex-col">
+    <div className="w-full h-full flex flex-row py-12">
+      <div className="flex-1 max-w-200 mx-auto h-full flex flex-col">
         <DiaryHeader />
         <div className="flex-1 w-full h-full tiptap py-4">
           <TitleEditor content={entry?.title || ""} />
@@ -50,6 +57,14 @@ function DiaryDetailContent() {
         </div>
         <DiaryFooter onSave={handleSave} />
       </div>
+      <AnnotationPanel
+        feedbackRecord={feedbackRecord}
+        activeFeedbackId={activeFeedbackId}
+        onFeedbackSelect={(id) => {
+          setActiveFeedbackId(id);
+          if (id) scrollToFeedback(id);
+        }}
+      />
     </div>
   );
 }
