@@ -1,13 +1,9 @@
 /**
  * WebLLM 인터페이스 React 훅
  *
- * 메인 스레드에서 LLM 엔진을 초기화하고 텍스트를 생성합니다.
- * Worker 관리와 Zustand 상태 동기를 담당합니다.
- *
- * 사용 규칙:
- * - 컴포넌트에서만 사용 (훅 규칙)
- * - 직접 engine에 접근 금지 → 항상 훅의 메서드 사용
- * - initialize()는 앱 시작 시 1회만 호출
+ * @deprecated useWebLLM을 사용하세요.
+ * 이 훅은 메인 스레드에서 MLCEngine을 직접 실행하여 UI 프레임 드롭이 발생합니다.
+ * useWebLLM은 Web Worker에서 실행되어 메인 스레드를 블로킹하지 않습니다.
  *
  * @module hooks/useLLM
  */

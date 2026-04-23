@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { Editor } from '@tiptap/react';
 import type { DiaryEntry, FeedbackRecord, Language, ChatMessage } from '@langjournal/core';
 import { buildFeedbackPrompt } from '@langjournal/core';
-import { useLLM } from './useLLM';
+import { useWebLLM } from './useWebLLM';
 
 /**
  * 에디터 내용 변경을 감지해서 자동으로 AI 피드백을 생성합니다.
@@ -29,7 +29,7 @@ export function useRealtimeFeedback(
     setFeedback: (record: FeedbackRecord) => void,
     targetLanguage: Language = 'en',
 ): { isAnalyzing: boolean } {
-    const { generateFeedback, status } = useLLM();
+    const { generateFeedback, status } = useWebLLM();
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const pendingRef = useRef(false);
 
@@ -54,8 +54,6 @@ export function useRealtimeFeedback(
                 updatedAt: Date.now(),
             };
 
-            console.log('entry ::::::: ', entry);
-
             const messages: ChatMessage[] = [
                 { role: 'user', content: buildFeedbackPrompt(entry) },
             ];
@@ -76,9 +74,7 @@ export function useRealtimeFeedback(
     useEffect(() => {
         if (!editor) return;
 
-
         const handleUpdate = () => {
-            console.log('????')
             if (debounceRef.current) clearTimeout(debounceRef.current);
             debounceRef.current = setTimeout(triggerAnalysis, 2000);
         };

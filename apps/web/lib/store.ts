@@ -9,8 +9,7 @@
  */
 
 import { create } from 'zustand';
-import type { MLCEngineInterface } from '@mlc-ai/web-llm';
-import type { LLMStatus, LLMLoadProgress } from '@langjournal/core';
+import type { LLMStatus, LLMLoadProgress, AiCoreEngine } from '@langjournal/core';
 
 // ============================================================================
 // LLM Store
@@ -26,7 +25,7 @@ import type { LLMStatus, LLMLoadProgress } from '@langjournal/core';
  */
 interface LLMState {
   /** WebLLM 엔진 인스턴스 (null = 미초기화) */
-  engine: MLCEngineInterface | null;
+  engine: AiCoreEngine | null;
 
   /** 엔진의 현재 상태 */
   status: LLMStatus;
@@ -40,7 +39,7 @@ interface LLMState {
   // ========== Actions ==========
 
   /** 엔진 인스턴스 저장 */
-  setEngine: (engine: MLCEngineInterface) => void;
+  setEngine: (engine: AiCoreEngine) => void;
 
   /** 상태 변경 */
   setStatus: (status: LLMStatus) => void;

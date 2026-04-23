@@ -24,5 +24,8 @@
     "@langjournal/eslint-config": "workspace:*",
     "@langjournal/typescript-config": "workspace:*",
     "typescript": "5.9.2"
+  },
+  "dependencies": {
+    "@mlc-ai/web-llm": "^0.2.82"
   }
 }

@@ -47,8 +47,8 @@
     --radius-4xl: 3rem;
     --radius-full: 9999px;
 
-    --font-display: 'Lexend', sans-serif;
-    --font-body: 'Plus Jakarta Sans', sans-serif;
+    --font-display: var(--font-lexend), 'Lexend', sans-serif;
+    --font-body: var(--font-plus-jakarta-sans), 'Plus Jakarta Sans', sans-serif;
 }
 
 :root {
@@ -79,8 +79,8 @@
     --outline-variant: #c8c7c3;
 
     /* Typography */
-    --font-display: 'Lexend', sans-serif;
-    --font-body: 'Plus Jakarta Sans', sans-serif;
+    --font-display: var(--font-lexend), 'Lexend', sans-serif;
+    --font-body: var(--font-plus-jakarta-sans), 'Plus Jakarta Sans', sans-serif;
 
     /* Radius Scale */
     --radius-sm: 0.5rem;

@@ -1,13 +1,13 @@
 "use client";
 
-import { useLLM } from "@/hooks/useLLM";
+import { useWebLLM } from "@/hooks/useWebLLM";
 import { useRealtimeFeedback } from "@/hooks/useRealtimeFeedback";
 import { Button, FeedbackTooltip } from "@langjournal/editor"
 import { useSharedEditor } from "@/components/diary/edit/diary-form-provider";
 import { Icon } from "@langjournal/ui/components/icon";
 import { Typography } from "@langjournal/ui/components/typography";
 import { Save } from "lucide-react";
-import { useLayoutEffect, useState } from "react";
+import { useState } from "react";
 
 interface DiaryFooterProps {
     /** 저장 버튼 클릭 시 호출되는 콜백 */
@@ -15,13 +15,8 @@ interface DiaryFooterProps {
 }
 
 export const DiaryFooter = ({ onSave }: DiaryFooterProps) => {
-    const { initialize, status } = useLLM();
+    const { status } = useWebLLM();
     const [isSaving, setIsSaving] = useState(false);
-
-    useLayoutEffect(() => {
-        // 페이지 진입 시 AI 모델 초기화
-        initialize();
-    }, [])
 
     const {
         editor,
@@ -41,6 +36,9 @@ export const DiaryFooter = ({ onSave }: DiaryFooterProps) => {
             setIsSaving(false);
         }
     };
+
+
+    console.log(status, '??????????')
 
     return (
         <div className="w-full flex flex-col items-end gap-4 mt-6">

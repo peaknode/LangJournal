@@ -1,21 +1,14 @@
-import {
-  ChatDetailBody,
-  ChatDetailHeader,
-  ChatDetailPanel,
-  SendMessageBox,
-} from "@/components/chat/detail";
+import { ChatDetailView } from './chat-detail-view';
 
-export default function ChatDetailPage() {
-  return (
-    <div className="w-full h-full flex">
-      <div className="w-full flex-[0.6] h-full flex flex-col">
-        <ChatDetailHeader />
-        {/* 채팅 내용 리스트 */}
-        <ChatDetailBody />
-        <SendMessageBox />
-      </div>
-      {/* 사이드 패널 */}
-      <ChatDetailPanel />
-    </div>
-  );
+/**
+ * 채팅 상세 페이지
+ *
+ * URL 파라미터로 일기 ID를 받아 해당 일기 기반 대화를 표시합니다.
+ */
+export default function ChatDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return <ChatDetailView params={params} />;
 }

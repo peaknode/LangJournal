@@ -82,7 +82,7 @@ const HeadingPopover = ({ editor }: { editor: Editor }) => {
                 <Button
                     variant="ghost"
                     size="sm"
-                    className="gap-1 justify-between hover:bg-transparent data-[state=open]:bg-transparent"
+                    className="gap-1 justify-between hover:bg-transparent data-[state=open]:bg-transparent h-full"
                 >
                     <span className="flex items-center gap-1.5">
                         {activeOption.icon}
@@ -120,29 +120,29 @@ export const MenuBar = ({ editor }: { editor: Editor | null }) => {
     }
 
     return (
-        <Toolbar className="flex items-center border-b border-t border-[#71717A]">
+        <Toolbar className="flex items-center border-b border-t border-[#E4E4E7] h-10.5">
             {/* Heading 선택 */}
-            <ToolbarGroup>
+            <ToolbarGroup className="h-full">
                 <HeadingPopover editor={editor} />
             </ToolbarGroup>
 
-            <ToolbarSeparator />
+            <ToolbarSeparator className="w-px h-6 bg-[#E4E4E7]" />
 
             {/* 텍스트 서식 (Mark) */}
-            <ToolbarGroup>
-                <MarkButton editor={editor} type="bold" />
-                <MarkButton editor={editor} type="italic" />
-                <MarkButton editor={editor} type="strike" />
+            <ToolbarGroup className="h-full gap-2 flex px-2">
+                <MarkButton editor={editor} type="bold" className="w-5 h-5" />
+                <MarkButton editor={editor} type="italic" className="w-5 h-5"/>
+                <MarkButton editor={editor} type="strike" className="w-5 h-5"/>
                 {/* <MarkButton editor={editor} type="" */}
                 {/* <MarkButton editor={editor} type="code" /> */}
             </ToolbarGroup>
 
-            <ToolbarSeparator />
+            <ToolbarSeparator className="w-px h-6 bg-[#E4E4E7]" />
 
             {/* Undo / Redo */}
-            <ToolbarGroup>
-                <UndoRedoButton editor={editor} action="undo" />
-                <UndoRedoButton editor={editor} action="redo" />
+            <ToolbarGroup className="h-full flex gap-2 px-2">
+                <UndoRedoButton editor={editor} action="undo"  className="w-5 h-5"/>
+                <UndoRedoButton editor={editor} action="redo"  className="w-5 h-5"/>
             </ToolbarGroup>
         </Toolbar>
     );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useLLM } from "../../hooks/useLLM";
+import { useWebLLM } from "../../hooks/useWebLLM";
 import { useLLMStore } from "../../lib/store";
 import { ModelLoading } from "./model-loading";
 import {
@@ -9,7 +9,6 @@ import {
   buildConversationStartPrompt,
 } from "@langjournal/core";
 import type { ConversationMessage, DiaryEntry } from "@langjournal/core";
-import * as webllm from "@mlc-ai/web-llm";
 
 /** 테스트용 고정 일기 항목 */
 const TEST_ENTRY: DiaryEntry = {
@@ -25,36 +24,19 @@ const TEST_ENTRY: DiaryEntry = {
   updatedAt: Date.now(),
 };
 
-type CacheState = "checking" | "cached" | "not-cached";
-
 /**
- * 대화 연습 채팅 UI
+ * 대화 연습 채팅 UI (레거시)
  *
- * 캐시 여부를 확인한 뒤 사용자가 직접 모델 로드를 시작합니다.
- * 캐시 없으면 다운로드 안내, 있으면 빠른 시작 버튼을 표시합니다.
+ * @deprecated chat/detail 컴포넌트 + useChat 훅으로 대체 예정
  */
 export function ChatBox() {
-  const { initialize, generate, checkCache, status } = useLLM();
+  const { initialize, generate, status } = useWebLLM();
   const { loadProgress, error } = useLLMStore();
 
-  const [cacheState, setCacheState] = useState<CacheState>("checking");
   const [history, setHistory] = useState<ConversationMessage[]>([]);
   const [input, setInput] = useState("");
   const [streamingText, setStreamingText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
-
-  const availableModels = webllm.prebuiltAppConfig.model_list.map(
-    (m) => m.model_id,
-  );
-
-  console.log(availableModels);
-
-  // 마운트 시 캐시 확인만 — 자동 다운로드 없음
-  useEffect(() => {
-    checkCache().then((cached) =>
-      setCacheState(cached ? "cached" : "not-cached"),
-    );
-  }, [checkCache]);
 
   // 모델 준비되면 AI가 대화 시작
   useEffect(() => {
@@ -138,35 +120,10 @@ export function ChatBox() {
         </p>
       </div>
 
-      {/* 캐시 확인 중 */}
-      {status === "idle" && cacheState === "checking" && (
+      {/* 엔진 준비 대기 (LLMProvider가 자동 초기화) */}
+      {status === "idle" && (
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-gray-500 text-sm">확인 중...</p>
-        </div>
-      )}
-
-      {/* 시작 전 — 다운로드 또는 빠른 시작 */}
-      {status === "idle" && cacheState !== "checking" && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-5 px-8">
-          <div className="text-center space-y-1">
-            <p className="text-white text-sm font-medium">
-              {cacheState === "cached"
-                ? "모델이 캐시에 있어요"
-                : "AI 모델이 필요합니다"}
-            </p>
-            <p className="text-gray-500 text-xs">
-              {cacheState === "cached"
-                ? "바로 시작할 수 있습니다"
-                : "Llama 3.2 3B · 약 1.8GB · 최초 1회만 다운로드"}
-            </p>
-          </div>
-
-          <button
-            onClick={initialize}
-            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-          >
-            {cacheState === "cached" ? "시작하기" : "모델 다운로드 및 시작"}
-          </button>
+          <p className="text-gray-500 text-sm">AI 엔진 준비 중...</p>
         </div>
       )}
 

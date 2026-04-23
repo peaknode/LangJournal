@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useLLM } from "../../hooks/useLLM";
+import { useWebLLM } from "../../hooks/useWebLLM";
 
 /**
  * LLM 초기화 상태를 표시하는 컴포넌트
@@ -10,7 +10,7 @@ import { useLLM } from "../../hooks/useLLM";
  * WebGPU 미지원 시 에러 메시지를 표시합니다.
  */
 export const LlmSelector = () => {
-  const { status, initialize } = useLLM();
+  const { status, initialize } = useWebLLM();
 
   useEffect(() => {
     initialize();

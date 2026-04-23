@@ -104,10 +104,11 @@ export const UndoRedoButton = forwardRef<
         onClick={handleClick}
         {...buttonProps}
         ref={ref}
+        className="h-full"
       >
         {children ?? (
           <>
-            <Icon className="tiptap-button-icon" />
+            <Icon className="tiptap-button-icon w-full" />
             {text && <span className="tiptap-button-text">{text}</span>}
             {showShortcut && (
               <HistoryShortcutBadge
