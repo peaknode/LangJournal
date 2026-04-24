@@ -4,7 +4,7 @@ import { createContext, useContext } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useEditorWithFeedback, useTitleEditor } from "@langjournal/editor";
 import type { Editor } from "@tiptap/react";
-import type { FeedbackRecord } from "@langjournal/core";
+import type { FeedbackRecord, Mood } from "@langjournal/core";
 
 /**
  * 일기 작성/수정 폼의 값을 정의하는 타입입니다.
@@ -15,6 +15,8 @@ export interface DiaryFormValues {
   date: Date;
   /** 목표 언어로 작성한 본문 (Tiptap HTML) */
   content: string;
+  /** 작성 당시 기분 (선택사항) */
+  mood?: Mood;
 }
 
 interface EditorContextType {

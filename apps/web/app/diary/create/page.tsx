@@ -38,8 +38,9 @@ function DiaryCreateContent() {
   const handleSave = async () => {
     const title = titleEditor?.getHTML() ?? "";
     const targetText = editor?.getHTML() ?? "";
+    const mood = getValues("mood");
 
-    await save({ title, targetText });
+    await save({ title, targetText, mood });
     router.push("/diary");
   };
 

@@ -3,6 +3,7 @@
 import type { DiaryEntry } from "@langjournal/core";
 import { formatDayParts } from "@/lib/date-utils";
 import { getLanguageLabel } from "@/lib/language-utils";
+import { getMoodEmoji } from "@/lib/mood-utils";
 import Link from "next/link";
 import { Separator } from "@langjournal/ui/components/separator";
 
@@ -21,6 +22,7 @@ export const DiaryListItem = ({ entry }: DiaryListItemProps) => {
   const { monthAbbrev, day } = formatDayParts(entry.date);
   const languageLabel = getLanguageLabel(entry.targetLanguage || "unknown");
   const moodEmoji = entry.mood ? getMoodEmoji(entry.mood) : null;
+
   const title = entry.title || entry.targetText.split("\n")[0] || "Untitled";
   const preview = entry.targetText.substring(0, 120);
 
@@ -53,35 +55,21 @@ export const DiaryListItem = ({ entry }: DiaryListItemProps) => {
 
           {/* 태그 */}
           <div className="flex items-center gap-2 shrink-0 pt-0.5">
-            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 uppercase">
+            {/* <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 uppercase">
               {languageLabel}
-            </span>
+            </span> */}
             {moodEmoji && <span className="text-sm">{moodEmoji}</span>}
-            {entry.feedback && (
+            {/* {entry.feedback && (
               <span
                 className="material-symbols-outlined text-lime-500 text-base"
                 style={{ fontVariationSettings: "'FILL' 1" }}
               >
                 check_circle
               </span>
-            )}
+            )} */}
           </div>
         </div>
       </article>
     </Link>
   );
 };
-
-/**
- * Mood 값을 이모지로 변환합니다.
- */
-function getMoodEmoji(mood: string): string {
-  const moodMap: Record<string, string> = {
-    great: "🤩",
-    good: "😊",
-    neutral: "😐",
-    bad: "😔",
-    terrible: "😢",
-  };
-  return moodMap[mood] || "";
-}

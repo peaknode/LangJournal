@@ -13,6 +13,7 @@ import { DiaryFooter } from "@/components/diary/edit/diary-footer/diary-footer";
 import { AnnotationPanel } from "@/components/diary/edit/annotation-panel";
 import { useFormContext } from "react-hook-form";
 import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { formatDateToString } from "@/lib/date-utils";
 import { useJournal } from "@/hooks/useJournal";
 import { useEntry } from "@/hooks/useEntry";
@@ -29,17 +30,24 @@ function DiaryDetailContent() {
     scrollToFeedback,
   } = useSharedEditor();
   const { titleEditor } = useTitleEditorContext();
-  const { getValues } = useFormContext<DiaryFormValues>();
+  const { getValues, setValue } = useFormContext<DiaryFormValues>();
   const router = useRouter();
 
   const dateStr = formatDateToString(getValues("date"));
   const { save } = useJournal(dateStr);
 
+  useEffect(() => {
+    if (entry?.mood !== undefined) {
+      setValue("mood", entry.mood);
+    }
+  }, [entry?.mood, setValue]);
+
   const handleSave = async () => {
     const title = titleEditor?.getHTML() ?? "";
     const targetText = editor?.getHTML() ?? "";
+    const mood = getValues("mood");
 
-    await save({ title, targetText });
+    await save({ title, targetText, mood });
     router.push("/diary");
   };
 

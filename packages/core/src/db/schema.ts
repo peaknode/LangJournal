@@ -9,7 +9,7 @@
 export type Language = 'en' | 'ja' | 'zh' | 'es' | 'fr';
 
 /** 일기 작성자의 기분 */
-export type Mood = 'great' | 'good' | 'neutral' | 'bad' | 'terrible';
+export type Mood = 'great' | 'good' | 'neutral' | 'anxious' | 'frustrated' | 'sad';
 
 /**
  * 문법 교정 항목
