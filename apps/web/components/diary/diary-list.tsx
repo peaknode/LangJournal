@@ -3,16 +3,21 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useInfiniteEntries } from "@/hooks/useInfiniteEntries";
 import { groupEntriesByMonth } from "@/lib/date-utils";
-import { DiaryListItem } from "./diary-list-item";
+import { DiaryListItem, type DiaryListVariant } from "./diary-list-item";
 import { Separator } from "@langjournal/ui/components/separator";
+
+interface DiaryListProps {
+  variant?: DiaryListVariant;
+}
 
 /**
  * 일기 목록을 월별 타임라인으로 렌더링합니다.
  * IntersectionObserver를 활용한 무한스크롤을 지원합니다.
  *
+ * @param variant - 항목 클릭 시 이동할 경로 종류 ("diary" | "chat"), 기본값 "diary"
  * @returns 월별 그룹핑된 타임라인 리스트
  */
-export const DiaryList = () => {
+export const DiaryList = ({ variant = "diary" }: DiaryListProps = {}) => {
   const { entries, loading, loadingMore, hasMore, loadMore } =
     useInfiniteEntries();
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -73,7 +78,11 @@ export const DiaryList = () => {
           <div className="bg-[#E3E3DE] rounded-xl p-4">
             {/* 해당 월의 일기 항목들 */}
             {group.entries.map((entry) => (
-              <DiaryListItem key={entry.id} entry={entry} />
+              <DiaryListItem
+                key={entry.id}
+                entry={entry}
+                variant={variant}
+              />
             ))}
           </div>
         </section>

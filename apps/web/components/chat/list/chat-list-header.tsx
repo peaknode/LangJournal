@@ -1,10 +1,7 @@
 "use client";
 
-import { Button } from "@langjournal/ui/components/button";
 import { Input } from "@langjournal/ui/components/input";
 import { Typography } from "@langjournal/ui/components/typography";
-import { PlusIcon } from "lucide-react";
-import Link from "next/link";
 
 export const ChatListHeader = () => {
   return (

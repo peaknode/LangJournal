@@ -5,7 +5,7 @@ export default function ChatPage() {
   return (
     <div className="p-12">
       <ChatListHeader />
-      <DiaryList />
+      <DiaryList variant="chat" />
     </div>
   );
 }

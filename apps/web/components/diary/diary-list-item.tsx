@@ -7,8 +7,11 @@ import { getMoodEmoji } from "@/lib/mood-utils";
 import Link from "next/link";
 import { Separator } from "@langjournal/ui/components/separator";
 
+export type DiaryListVariant = "diary" | "chat";
+
 interface DiaryListItemProps {
   entry: DiaryEntry;
+  variant?: DiaryListVariant;
 }
 
 /**
@@ -16,18 +19,22 @@ interface DiaryListItemProps {
  * 왼쪽에 날짜(월 약자 + 일자), 오른쪽에 제목·미리보기·태그를 표시합니다.
  *
  * @param entry - 렌더링할 일기 항목
+ * @param variant - 클릭 시 이동할 경로 종류 ("diary" | "chat"), 기본값 "diary"
  */
-export const DiaryListItem = ({ entry }: DiaryListItemProps) => {
-  // const navigate = useLink
+export const DiaryListItem = ({
+  entry,
+  variant = "diary",
+}: DiaryListItemProps) => {
   const { monthAbbrev, day } = formatDayParts(entry.date);
   const languageLabel = getLanguageLabel(entry.targetLanguage || "unknown");
   const moodEmoji = entry.mood ? getMoodEmoji(entry.mood) : null;
 
   const title = entry.title || entry.targetText.split("\n")[0] || "Untitled";
   const preview = entry.targetText.substring(0, 120);
+  const href = variant === "chat" ? `/chat/${entry.id}` : `/diary/${entry.id}`;
 
   return (
-    <Link href={`/diary/${entry.id}`}>
+    <Link href={href}>
       <article className="flex items-center gap-6 py-4 px-2 border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors cursor-pointer">
         {/* 날짜 열 */}
         <div className="flex flex-col items-center w-12 shrink-0 pt-0.5">
