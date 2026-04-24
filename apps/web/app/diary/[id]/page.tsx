@@ -53,7 +53,9 @@ function DiaryDetailContent() {
         <DiaryHeader />
         <div className="flex-1 w-full h-full tiptap py-4">
           <TitleEditor content={entry?.title || ""} />
-          <ContentEditor content={entry?.targetText || ""} />
+          <div className="bg-white w-full h-[90%] rounded-2xl p-12 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+            <ContentEditor content={entry?.targetText || ""} />
+          </div>
         </div>
         <DiaryFooter onSave={handleSave} />
       </div>

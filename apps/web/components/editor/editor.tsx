@@ -21,7 +21,7 @@ export const ContentEditor = ({ content }: Props) => {
 
   return (
     <>
-      <MenuBar editor={editor} />
+      {/* <MenuBar editor={editor} /> */}
 
       {/* AI 상태 배너 */}
       {/* {status === 'idle' && (
@@ -45,9 +45,7 @@ export const ContentEditor = ({ content }: Props) => {
                 </div>
             )} */}
 
-      <div className="py-4">
-        <EditorContent editor={editor} />
-      </div>
+      <EditorContent editor={editor} />
 
       <FeedbackTooltip
         tooltip={activeTooltip}

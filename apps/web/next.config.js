@@ -28,6 +28,9 @@ const nextConfig = {
     pageExtensions: ["ts", "tsx"],
     reactStrictMode: true,
     transpilePackages: ['@langjournal/editor', '@langjournal/ui'],
+    experimental: {
+        viewTransition: true,
+    },
 };
 
 export default nextConfig;

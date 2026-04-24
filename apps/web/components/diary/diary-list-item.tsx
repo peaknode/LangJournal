@@ -4,6 +4,7 @@ import type { DiaryEntry } from "@langjournal/core";
 import { formatDayParts } from "@/lib/date-utils";
 import { getLanguageLabel } from "@/lib/language-utils";
 import Link from "next/link";
+import { Separator } from "@langjournal/ui/components/separator";
 
 interface DiaryListItemProps {
   entry: DiaryEntry;
@@ -25,7 +26,7 @@ export const DiaryListItem = ({ entry }: DiaryListItemProps) => {
 
   return (
     <Link href={`/diary/${entry.id}`}>
-      <article className="flex items-start gap-6 py-4 px-2 border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors cursor-pointer">
+      <article className="flex items-center gap-6 py-4 px-2 border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors cursor-pointer">
         {/* 날짜 열 */}
         <div className="flex flex-col items-center w-12 shrink-0 pt-0.5">
           <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 font-label">
@@ -35,6 +36,8 @@ export const DiaryListItem = ({ entry }: DiaryListItemProps) => {
             {day}
           </span>
         </div>
+
+        <Separator orientation="vertical" className="h-8!" />
 
         {/* 콘텐츠 */}
         <div className="flex-1 min-w-0 flex items-start justify-between gap-4">

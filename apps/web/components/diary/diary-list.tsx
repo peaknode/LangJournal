@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useInfiniteEntries } from "@/hooks/useInfiniteEntries";
 import { groupEntriesByMonth } from "@/lib/date-utils";
 import { DiaryListItem } from "./diary-list-item";
+import { Separator } from "@langjournal/ui/components/separator";
 
 /**
  * 일기 목록을 월별 타임라인으로 렌더링합니다.
@@ -62,10 +63,11 @@ export const DiaryList = () => {
       {groups.map((group) => (
         <section key={group.key}>
           {/* 월 헤더 */}
-          <div className="sticky top-0 z-10 dark:bg-zinc-950/80 backdrop-blur-sm py-3 px-1">
+          <div className="sticky top-0 z-10 dark:bg-zinc-950/80 backdrop-blur-sm py-3 px-1 flex items-center gap-3">
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400">
               {group.label}
             </h2>
+            <div className="h-px flex-1 bg-zinc-400"></div>
           </div>
 
           {/* 해당 월의 일기 항목들 */}
