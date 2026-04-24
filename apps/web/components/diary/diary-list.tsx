@@ -70,10 +70,12 @@ export const DiaryList = () => {
             <div className="h-px flex-1 bg-zinc-400"></div>
           </div>
 
-          {/* 해당 월의 일기 항목들 */}
-          {group.entries.map((entry) => (
-            <DiaryListItem key={entry.id} entry={entry} />
-          ))}
+          <div className="bg-[#E3E3DE] rounded-xl p-4">
+            {/* 해당 월의 일기 항목들 */}
+            {group.entries.map((entry) => (
+              <DiaryListItem key={entry.id} entry={entry} />
+            ))}
+          </div>
         </section>
       ))}
 
