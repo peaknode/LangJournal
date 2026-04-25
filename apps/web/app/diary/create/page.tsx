@@ -4,9 +4,9 @@ import { ContentEditor } from "@/components";
 import { DiaryHeader } from "@/components/diary";
 import { DiaryFooter } from "@/components/diary/edit/diary-footer/diary-footer";
 import {
-  DiaryFormProvider,
-  useSharedEditor,
-  useTitleEditorContext,
+    DiaryFormProvider,
+    useSharedEditor,
+    useTitleEditorContext,
 } from "@/components/diary/edit/diary-form-provider";
 import type { DiaryFormValues } from "@/components/diary/edit/diary-form-provider";
 import { AnnotationPanel } from "@/components/diary/edit/annotation-panel";
@@ -21,55 +21,59 @@ import { useFormContext } from "react-hook-form";
  * 에디터 인스턴스와 폼 상태에 접근하여 저장 핸들러를 구성합니다.
  */
 function DiaryCreateContent() {
-  const {
-    editor,
-    feedbackRecord,
-    activeFeedbackId,
-    setActiveFeedbackId,
-    scrollToFeedback,
-  } = useSharedEditor();
-  const { titleEditor } = useTitleEditorContext();
-  const { getValues } = useFormContext<DiaryFormValues>();
-  const router = useRouter();
+    const {
+        editor,
+        feedbackRecord,
+        activeFeedbackId,
+        setActiveFeedbackId,
+        scrollToFeedback,
+    } = useSharedEditor();
+    const { titleEditor } = useTitleEditorContext();
+    const { getValues } = useFormContext<DiaryFormValues>();
+    const router = useRouter();
 
-  const dateStr = formatDateToString(getValues("date"));
-  const { save } = useJournal(dateStr);
+    const dateStr = formatDateToString(getValues("date"));
+    const { save } = useJournal(dateStr);
 
-  const handleSave = async () => {
-    const title = titleEditor?.getHTML() ?? "";
-    const targetText = editor?.getHTML() ?? "";
-    const mood = getValues("mood");
+    const handleSave = async () => {
+        const title = titleEditor?.getHTML() ?? "";
+        const targetText = editor?.getHTML() ?? "";
+        const mood = getValues("mood");
 
-    await save({ title, targetText, mood });
-    router.push("/diary");
-  };
+        await save({ title, targetText, mood });
+        router.push("/diary");
+    };
 
-  return (
-    <div className="w-full h-full flex flex-row py-12">
-      <div className="flex-1 max-w-200 mx-auto h-full flex flex-col">
-        <DiaryHeader />
-        <div className="flex-1 w-full h-full tiptap py-4">
-          <TitleEditor />
-          <ContentEditor />
-        </div>
-        <DiaryFooter onSave={handleSave} />
-      </div>
-      <AnnotationPanel
+    return (
+        <div className="w-full h-full flex flex-col">
+            <div className="p-12 border-b">
+                <div className="tiptap">
+                    <TitleEditor />
+                </div>
+                <DiaryHeader />
+            </div>
+            <div className="w-[70%] flex-1 mx-auto flex flex-col py-6 flex flex-col justify-between">
+                <div className="tiptap bg-white w-full h-full rounded-2xl p-12 shadow-[0_1px_2px_rgba(0,0,0,0.05)] flex-[0.9]">
+                    <ContentEditor />
+                </div>
+                <DiaryFooter onSave={handleSave} />
+            </div>
+            {/* <AnnotationPanel
         feedbackRecord={feedbackRecord}
         activeFeedbackId={activeFeedbackId}
         onFeedbackSelect={(id) => {
           setActiveFeedbackId(id);
           if (id) scrollToFeedback(id);
         }}
-      />
-    </div>
-  );
+      /> */}
+        </div>
+    );
 }
 
 export default function DiaryCreatePage() {
-  return (
-    <DiaryFormProvider>
-      <DiaryCreateContent />
-    </DiaryFormProvider>
-  );
+    return (
+        <DiaryFormProvider>
+            <DiaryCreateContent />
+        </DiaryFormProvider>
+    );
 }

@@ -5,7 +5,7 @@ import type { FeedbackRecord, Correction, Suggestion } from '@langjournal/core';
 import { FeedbackHighlight, FeedbackHighlightKey } from '../extensions/feedback-highlight.js';
 import type { DecorationItemType, TooltipState } from '../types.js';
 import { mapCorrectionToRange, findAllSuggestionRanges } from '../utils/position-mapping.js';
-import { Placeholder } from '@tiptap/extensions';
+import { CharacterCount, Placeholder } from '@tiptap/extensions';
 
 /**
  * data-* 속성에서 툴팁 상태를 빌드합니다.
@@ -90,7 +90,7 @@ export function useEditorWithFeedback() {
     }, []);
 
     const editor = useEditor({
-        extensions: [StarterKit, FeedbackHighlight, Placeholder.configure({
+        extensions: [StarterKit, CharacterCount, FeedbackHighlight, Placeholder.configure({
             placeholder: "Start writing your thoughts...",
         }),],
         editorProps: {
