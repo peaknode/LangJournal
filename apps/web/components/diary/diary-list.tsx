@@ -4,10 +4,13 @@ import { useEffect, useMemo, useRef } from "react";
 import { useInfiniteEntries } from "@/hooks/useInfiniteEntries";
 import { groupEntriesByMonth } from "@/lib/date-utils";
 import { DiaryListItem, type DiaryListVariant } from "./diary-list-item";
+import { DiaryCardItem } from "./diary-card-item";
 import { Separator } from "@langjournal/ui/components/separator";
+import { Typography } from "@langjournal/ui/components/typography";
 
 interface DiaryListProps {
     variant?: DiaryListVariant;
+    layout?: 'list' | 'card';
 }
 
 /**
@@ -15,9 +18,10 @@ interface DiaryListProps {
  * IntersectionObserver를 활용한 무한스크롤을 지원합니다.
  *
  * @param variant - 항목 클릭 시 이동할 경로 종류 ("diary" | "chat"), 기본값 "diary"
- * @returns 월별 그룹핑된 타임라인 리스트
+ * @param layout - 레이아웃 방식 ("list" | "card"), 기본값 "list"
+ * @returns 월별 그룹핑된 타임라인 또는 카드 그리드
  */
-export const DiaryList = ({ variant = "diary" }: DiaryListProps = {}) => {
+export const DiaryList = ({ variant = "diary", layout = "list" }: DiaryListProps = {}) => {
     const { entries, loading, loadingMore, hasMore, loadMore } =
         useInfiniteEntries();
     const sentinelRef = useRef<HTMLDivElement>(null);
@@ -62,28 +66,56 @@ export const DiaryList = ({ variant = "diary" }: DiaryListProps = {}) => {
 
     return (
         <div className="w-full py-10.5">
-            {groups.map((group) => (
-                <section key={group.key}>
-                    {/* 월 헤더 */}
-                    <div className="sticky top-0 z-10 dark:bg-zinc-950/80 backdrop-blur-sm py-3 px-1 flex items-center gap-3">
-                        <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400">
-                            {group.label}
-                        </h2>
-                        <div className="h-px flex-1 bg-zinc-400"></div>
-                    </div>
+            {layout === 'list' ? (
+                // 리스트 레이아웃
+                groups.map((group) => (
+                    <section key={group.key}>
+                        {/* 월 헤더 */}
+                        <div className="sticky top-0 z-10 dark:bg-zinc-950/80 backdrop-blur-sm py-3 px-1 flex items-center gap-3">
+                            <Typography variant="headline-sm">
+                                {group.label}
+                            </Typography>
 
-                    <div className="bg-[#E3E3DE] rounded-xl p-4">
-                        {/* 해당 월의 일기 항목들 */}
-                        {group.entries.map((entry) => (
-                            <DiaryListItem
-                                key={entry.id}
-                                entry={entry}
-                                variant={variant}
-                            />
-                        ))}
-                    </div>
-                </section>
-            ))}
+                            <div className="h-px flex-1 bg-zinc-400"></div>
+                        </div>
+
+                        <div className="p-4">
+                            {/* 해당 월의 일기 항목들 */}
+                            {group.entries.map((entry) => (
+                                <DiaryListItem
+                                    key={entry.id}
+                                    entry={entry}
+                                    variant={variant}
+                                />
+                            ))}
+                        </div>
+                    </section>
+                ))
+            ) : (
+                // 카드 레이아웃
+                groups.map((group) => (
+                    <section key={group.key}>
+                        {/* 월 헤더 */}
+                        <div className="sticky top-0 z-10 dark:bg-zinc-950/80 backdrop-blur-sm py-3 px-1 flex items-center gap-3">
+                            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400">
+                                {group.label}
+                            </h2>
+                            <div className="h-px flex-1 bg-zinc-400"></div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                            {/* 해당 월의 일기 카드 */}
+                            {group.entries.map((entry) => (
+                                <DiaryCardItem
+                                    key={entry.id}
+                                    entry={entry}
+                                    variant={variant}
+                                />
+                            ))}
+                        </div>
+                    </section>
+                ))
+            )}
 
             {/* 무한스크롤 센티넬 */}
             <div ref={sentinelRef} className="h-1" />

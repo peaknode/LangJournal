@@ -85,6 +85,7 @@ export const useLLMStore = create<LLMState>((set) => ({
  * 특징:
  * - currentEntryId: 현재 보고 있는 일기의 ID (필터링, 대화 세션 기반)
  * - mode: 쓰기/피드백/채팅 모드 전환
+ * - diaryLayout: 일기 리스트 레이아웃 (리스트 or 카드)
  *
  * @remarks
  * LLMStore와 분리된 이유: LLM은 애플리케이션 수명, Journal은 페이지별 상태
@@ -101,6 +102,9 @@ interface JournalState {
    */
   mode: 'write' | 'feedback' | 'chat';
 
+  /** 일기 리스트 레이아웃 ('list' | 'card') */
+  diaryLayout: 'list' | 'card';
+
   // ========== Actions ==========
 
   /** 현재 일기 변경 */
@@ -108,6 +112,9 @@ interface JournalState {
 
   /** 모드 변경 */
   setMode: (mode: JournalState['mode']) => void;
+
+  /** 일기 리스트 레이아웃 변경 */
+  setDiaryLayout: (layout: 'list' | 'card') => void;
 }
 
 /**
@@ -120,7 +127,9 @@ interface JournalState {
 export const useJournalStore = create<JournalState>((set) => ({
   currentEntryId: null,
   mode: 'write',
+  diaryLayout: 'list',
 
   setCurrentEntryId: (id) => set({ currentEntryId: id }),
   setMode: (mode) => set({ mode }),
+  setDiaryLayout: (layout) => set({ diaryLayout: layout }),
 }));
