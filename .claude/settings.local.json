@@ -8,7 +8,11 @@
       "Bash(awk '{print $2}')",
       "Bash(xargs kill *)",
       "Skill(browse)",
-      "Skill(browse:*)"
+      "Skill(browse:*)",
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(lsof -ti:3000)",
+      "Bash(curl -s http://localhost:3001/)",
+      "Bash(curl -s http://localhost:3001/diary)"
     ]
   }
 }
